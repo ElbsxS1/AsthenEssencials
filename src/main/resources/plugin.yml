@@ -1,0 +1,138 @@
+name: AsthenEssentials
+version: '${project.version}'
+main: br.asthen.essentials.bukkit.AsthenEssentials
+api-version: '26.3'
+description: Economia, homes, warps, spawn, TPA, back, rtp e moderação para o servidor Asthen.
+authors: [ElbsxS1]
+
+commands:
+  money:
+    description: Mostra seu saldo ou o de outro jogador.
+    aliases: [saldo, bal, balance]
+    usage: /money [jogador]
+    permission: asthenessentials.money
+  pay:
+    description: Envia dinheiro a outro jogador.
+    usage: /pay <jogador> <valor>
+    permission: asthenessentials.pay
+  baltop:
+    description: Ranking dos mais ricos.
+    aliases: [topmoney]
+    usage: /baltop
+    permission: asthenessentials.money
+  eco:
+    description: Administra o dinheiro dos jogadores.
+    usage: /eco <give|take|set> <jogador> <valor>
+    permission: asthenessentials.admin
+  sethome:
+    description: Define uma home.
+    usage: /sethome [nome]
+    permission: asthenessentials.home
+  home:
+    description: Vai para uma home.
+    usage: /home [nome]
+    permission: asthenessentials.home
+  delhome:
+    description: Apaga uma home.
+    usage: /delhome <nome>
+    permission: asthenessentials.home
+  homes:
+    description: Lista suas homes.
+    usage: /homes
+    permission: asthenessentials.home
+  setwarp:
+    description: Cria ou move um warp.
+    usage: /setwarp <nome>
+    permission: asthenessentials.admin
+  delwarp:
+    description: Apaga um warp.
+    usage: /delwarp <nome>
+    permission: asthenessentials.admin
+  warp:
+    description: Vai para um warp.
+    usage: /warp <nome>
+    permission: asthenessentials.warp
+  warps:
+    description: Lista os warps.
+    usage: /warps
+    permission: asthenessentials.warp
+  setspawn:
+    description: Define o spawn do servidor.
+    usage: /setspawn
+    permission: asthenessentials.admin
+  spawn:
+    description: Vai para o spawn.
+    usage: /spawn
+    permission: asthenessentials.spawn
+  tpa:
+    description: Pede teleporte a outro jogador.
+    usage: /tpa <jogador>
+    permission: asthenessentials.tpa
+  tpaccept:
+    description: Aceita um pedido de TPA.
+    aliases: [tpaceitar]
+    usage: /tpaccept
+    permission: asthenessentials.tpa
+  tpdeny:
+    description: Recusa um pedido de TPA.
+    aliases: [tprejeitar]
+    usage: /tpdeny
+    permission: asthenessentials.tpa
+  back:
+    description: Volta ao local anterior (ou da morte).
+    usage: /back
+    permission: asthenessentials.back
+  rtp:
+    description: Teleporte aleatório.
+    usage: /rtp
+    permission: asthenessentials.rtp
+  kick:
+    description: Expulsa um jogador.
+    usage: /kick <jogador> [motivo]
+    permission: asthenessentials.admin
+  ban:
+    description: Bane um jogador permanentemente.
+    usage: /ban <jogador> [motivo]
+    permission: asthenessentials.admin
+  tempban:
+    description: Bane por um tempo (ex: 30m, 2h, 7d).
+    usage: /tempban <jogador> <tempo> [motivo]
+    permission: asthenessentials.admin
+  unban:
+    description: Remove o ban de um jogador.
+    usage: /unban <jogador>
+    permission: asthenessentials.admin
+  mute:
+    description: Silencia um jogador (tempo opcional).
+    usage: /mute <jogador> [tempo] [motivo]
+    permission: asthenessentials.admin
+  unmute:
+    description: Remove o mute.
+    usage: /unmute <jogador>
+    permission: asthenessentials.admin
+  aessentials:
+    description: Recarrega a configuração.
+    aliases: [asthenessentials]
+    usage: /aessentials reload
+    permission: asthenessentials.admin
+
+permissions:
+  astenessentials.admin:
+    description: Comandos administrativos.
+    default: op
+  astenessentials.money:
+    default: true
+  astenessentials.pay:
+    default: true
+  astenessentials.home:
+    default: true
+  astenessentials.warp:
+    default: true
+  astenessentials.spawn:
+    default: true
+  astenessentials.tpa:
+    default: true
+  astenessentials.back:
+    default: true
+  astenessentials.rtp:
+    default: true
