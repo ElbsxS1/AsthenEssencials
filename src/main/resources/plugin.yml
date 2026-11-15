@@ -57,7 +57,7 @@ commands:
     usage: /warps
     permission: asthenessentials.warp
   setspawn:
-    description: Define o spawn do servidor.
+    description: Define o spawn.
     usage: /setspawn
     permission: asthenessentials.admin
   spawn:
@@ -65,21 +65,19 @@ commands:
     usage: /spawn
     permission: asthenessentials.spawn
   tpa:
-    description: Pede teleporte a outro jogador.
+    description: Pede para ir até outro jogador.
     usage: /tpa <jogador>
     permission: asthenessentials.tpa
   tpaccept:
-    description: Aceita um pedido de TPA.
-    aliases: [tpaceitar]
+    description: Aceita um pedido de teleporte.
     usage: /tpaccept
     permission: asthenessentials.tpa
   tpdeny:
-    description: Recusa um pedido de TPA.
-    aliases: [tprejeitar]
+    description: Recusa um pedido de teleporte.
     usage: /tpdeny
     permission: asthenessentials.tpa
   back:
-    description: Volta ao local anterior (ou da morte).
+    description: Volta ao último local (ou à morte).
     usage: /back
     permission: asthenessentials.back
   rtp:
@@ -91,15 +89,15 @@ commands:
     usage: /kick <jogador> [motivo]
     permission: asthenessentials.admin
   ban:
-    description: Bane um jogador permanentemente.
+    description: Bane um jogador.
     usage: /ban <jogador> [motivo]
     permission: asthenessentials.admin
   tempban:
-    description: Bane por um tempo (ex: 30m, 2h, 7d).
+    description: Bane por tempo (30m, 2h, 7d).
     usage: /tempban <jogador> <tempo> [motivo]
     permission: asthenessentials.admin
   unban:
-    description: Remove o ban de um jogador.
+    description: Remove um ban.
     usage: /unban <jogador>
     permission: asthenessentials.admin
   mute:
@@ -107,32 +105,31 @@ commands:
     usage: /mute <jogador> [tempo] [motivo]
     permission: asthenessentials.admin
   unmute:
-    description: Remove o mute.
+    description: Remove o silêncio.
     usage: /unmute <jogador>
     permission: asthenessentials.admin
   aessentials:
     description: Recarrega a configuração.
-    aliases: [asthenessentials]
     usage: /aessentials reload
     permission: asthenessentials.admin
 
 permissions:
-  astenessentials.admin:
-    description: Comandos administrativos.
+  asthenessentials.admin:
+    description: Comandos de administração e moderação.
     default: op
-  astenessentials.money:
+  asthenessentials.money:
     default: true
-  astenessentials.pay:
+  asthenessentials.pay:
     default: true
-  astenessentials.home:
+  asthenessentials.home:
     default: true
-  astenessentials.warp:
+  asthenessentials.warp:
     default: true
-  astenessentials.spawn:
+  asthenessentials.spawn:
     default: true
-  astenessentials.tpa:
+  asthenessentials.tpa:
     default: true
-  astenessentials.back:
+  asthenessentials.back:
     default: true
-  astenessentials.rtp:
+  asthenessentials.rtp:
     default: true

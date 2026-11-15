@@ -2,100 +2,126 @@ package br.asthen.essentials.core;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Persistent balances in whole cents. Transfers are atomic (all-or-nothing). */
+/** Balances in cents. Every mutation is validated and all-or-nothing; saved after each change. */
 public final class Economy {
+
+    public enum Result { OK, INVALID_AMOUNT, NO_FUNDS, OVERFLOW, SAME_ACCOUNT }
+
+    public record Entry(UUID id, String name, long cents) {
+    }
+
     private final Path file;
-    private final long starting;
-    private final Map<UUID, Long> balances = new LinkedHashMap<>();
-    private final Map<UUID, String> names = new LinkedHashMap<>();
+    private final long startingCents;
+    private final Map<UUID, Long> balances = new HashMap<>();
+    private final Map<UUID, String> names = new HashMap<>();
 
     public Economy(Path file, long startingCents) {
         this.file = file;
-        this.starting = Math.max(0, Math.min(Money.MAX, startingCents));
+        this.startingCents = startingCents;
+        load();
+    }
+
+    private void load() {
         Map<String, Object> root = JsonFile.load(file);
         for (Map.Entry<String, Object> e : root.entrySet()) {
             try {
                 UUID id = UUID.fromString(e.getKey());
-                Map<String, Object> m = JsonFile.obj(e.getValue());
-                long bal = JsonFile.lng(m.get("balance"), starting);
-                String name = m.get("name") instanceof String s ? s : "?";
-                balances.put(id, Math.max(0, Math.min(Money.MAX, bal)));
-                names.put(id, name);
-            } catch (Exception ignored) {
+                Map<String, Object> a = JsonFile.obj(e.getValue());
+                balances.put(id, Math.max(0, JsonFile.lng(a.get("cents"), startingCents)));
+                if (a.get("name") instanceof String n) names.put(id, n);
+            } catch (IllegalArgumentException ignored) {
+                // skip corrupt key
             }
         }
     }
 
+    private synchronized void save() {
+        Map<String, Object> root = new LinkedHashMap<>();
+        for (Map.Entry<UUID, Long> e : balances.entrySet()) {
+            Map<String, Object> a = new LinkedHashMap<>();
+            a.put("name", names.getOrDefault(e.getKey(), ""));
+            a.put("cents", e.getValue());
+            root.put(e.getKey().toString(), a);
+        }
+        JsonFile.save(file, root);
+    }
+
     public synchronized void touch(UUID id, String name) {
-        if (!balances.containsKey(id)) balances.put(id, starting);
-        if (name != null && !name.isBlank()) names.put(id, name);
-        save();
+        boolean isNew = !balances.containsKey(id);
+        if (isNew) balances.put(id, startingCents);
+        if (name != null && !name.equals(names.get(id))) names.put(id, name);
+        if (isNew || name != null) save();
     }
 
-    public synchronized long get(UUID id) {
-        return balances.getOrDefault(id, starting);
+    public synchronized long balance(UUID id) {
+        return balances.getOrDefault(id, startingCents);
     }
 
-    public synchronized String nameOf(UUID id) {
-        return names.getOrDefault(id, "?");
+    public synchronized boolean has(UUID id) {
+        return balances.containsKey(id);
     }
 
     public synchronized UUID findByName(String name) {
-        if (name == null) return null;
-        String lower = name.toLowerCase();
         for (Map.Entry<UUID, String> e : names.entrySet()) {
-            if (e.getValue().equalsIgnoreCase(lower)) return e.getKey();
+            if (e.getValue().equalsIgnoreCase(name)) return e.getKey();
         }
         return null;
     }
 
-    public synchronized boolean set(UUID id, long cents) {
-        if (cents < 0 || cents > Money.MAX) return false;
+    public synchronized String nameOf(UUID id) {
+        return names.getOrDefault(id, id.toString().substring(0, 8));
+    }
+
+    public synchronized Result set(UUID id, long cents) {
+        if (cents < 0 || cents > Money.MAX) return Result.INVALID_AMOUNT;
         balances.put(id, cents);
         save();
-        return true;
+        return Result.OK;
     }
 
-    public synchronized boolean add(UUID id, long delta) {
-        long cur = get(id);
-        long next = cur + delta;
-        if (next < 0 || next > Money.MAX) return false;
+    public synchronized Result give(UUID id, long cents) {
+        if (cents <= 0) return Result.INVALID_AMOUNT;
+        long next = balance(id) + cents;
+        if (next > Money.MAX) return Result.OVERFLOW;
         balances.put(id, next);
         save();
-        return true;
+        return Result.OK;
     }
 
-    /** Atomic transfer: both balances update or neither does. */
-    public synchronized boolean transfer(UUID from, UUID to, long amount) {
-        if (amount <= 0 || from.equals(to)) return false;
-        long a = get(from), b = get(to);
-        if (a < amount || b + amount > Money.MAX) return false;
-        balances.put(from, a - amount);
-        balances.put(to, b + amount);
+    public synchronized Result take(UUID id, long cents) {
+        if (cents <= 0) return Result.INVALID_AMOUNT;
+        long cur = balance(id);
+        if (cur < cents) return Result.NO_FUNDS;
+        balances.put(id, cur - cents);
         save();
-        return true;
+        return Result.OK;
     }
 
-    public synchronized List<Map.Entry<UUID, Long>> top(int n) {
-        List<Map.Entry<UUID, Long>> list = new ArrayList<>(balances.entrySet());
-        list.sort(Map.Entry.<UUID, Long>comparingByValue().reversed());
-        return list.subList(0, Math.min(n, list.size()));
+    /** Atomic transfer: either both sides change or neither does. */
+    public synchronized Result transfer(UUID from, UUID to, long cents) {
+        if (from.equals(to)) return Result.SAME_ACCOUNT;
+        if (cents <= 0) return Result.INVALID_AMOUNT;
+        long a = balance(from), b = balance(to);
+        if (a < cents) return Result.NO_FUNDS;
+        if (b + cents > Money.MAX) return Result.OVERFLOW;
+        balances.put(from, a - cents);
+        balances.put(to, b + cents);
+        save();
+        return Result.OK;
     }
 
-    public synchronized void save() {
-        Map<String, Object> root = new LinkedHashMap<>();
-        for (UUID id : balances.keySet()) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("balance", balances.get(id));
-            m.put("name", names.getOrDefault(id, "?"));
-            root.put(id.toString(), m);
+    public synchronized List<Entry> top(int n) {
+        List<Entry> all = new ArrayList<>();
+        for (Map.Entry<UUID, Long> e : balances.entrySet()) {
+            all.add(new Entry(e.getKey(), nameOf(e.getKey()), e.getValue()));
         }
-        JsonFile.save(file, root);
+        all.sort((x, y) -> Long.compare(y.cents(), x.cents()));
+        return all.subList(0, Math.min(n, all.size()));
     }
 }

@@ -28,11 +28,23 @@ Comandos sem permissão não aparecem para quem não pode usá-los.
 3. Dados em `plugins/AsthenEssentials/`: `economy.json`, `places.json`, `punishments.json`.
 
 ## Testes
-`./scripts/run-tests.sh` roda 45 testes (JDK puro) do núcleo: dinheiro, transferências atômicas, homes,
-warps, punições (ban/mute com expiração), TPA e cooldowns. A CI do GitHub executa isso a cada push.
+`./scripts/run-tests.sh` roda 45 testes (JDK puro) do núcleo: dinheiro, transferências atômicas, homes/warps,
+TPA com expiração, cooldowns, bans/mutes temporários e persistência. A camada do Paper foi só compilada contra stubs;
+valide em jogo com o roteiro abaixo.
 
-## Build local
-```bash
-mvn -B package   # gera target/AsthenEssentials-*.jar
-```
-Requer **JDK 25** (Paper 26.3 API).
+### Roteiro em jogo
+- [ ] `/money` mostra o saldo inicial; `/pay` entre dois jogadores muda os dois saldos; `/pay` sem saldo é recusado.
+- [ ] `/sethome`, `/home` (espera 3s; andar cancela), `/homes`, `/delhome`; limite de homes respeitado.
+- [ ] `/setwarp x` (op), `/warp x` (jogador comum), `/spawn`, `/setspawn`.
+- [ ] `/tpa` + `/tpaccept` e `/tpdeny`; pedido expira em 60s.
+- [ ] Morrer e usar `/back`; `/rtp` leva a lugar seguro e respeita o intervalo.
+- [ ] `/tempban Fulano 1m` expulsa e impede entrar por 1 minuto; `/mute Fulano 1m` bloqueia o chat; `/unban`, `/unmute`.
+- [ ] Reiniciar o servidor mantém saldo, homes, warps, spawn, bans e mutes.
+- [ ] Jogador sem op não vê `/eco`, `/ban`, `/setwarp` etc.
+
+## Roadmap
+Fase 2: loja/venda (`/shop`, `/sell`), saque (`/withdraw`), leilão; Fase 3: terrenos, ranks, textos flutuantes.
+Possível integração: comprar kits do DiscordKitBridge com o dinheiro do servidor.
+
+## Créditos
+Inspirado em *Minecraft Essentials* de Paoeni (MIT). Nenhum código ou recurso do add-on foi copiado.
