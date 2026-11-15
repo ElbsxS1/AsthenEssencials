@@ -1,0 +1,22 @@
+# Asthen Essentials
+
+economy:
+  currency-symbol: "R$ "     # prefixo mostrado nos valores
+  starting-balance: 100      # saldo inicial (em reais, aceita 100 ou 100,50)
+  baltop-size: 10
+
+homes:
+  max: 3
+
+teleport:
+  warmup-seconds: 3          # espera antes de teleportar; mexer cancela (0 = instantâneo)
+  cooldown-seconds: 10       # intervalo entre teleportes (home/warp/spawn/tpa/back)
+  tpa-timeout-seconds: 60
+
+rtp:
+  radius: 3000
+  cooldown-seconds: 300
+  attempts: 12
+
+moderation:
+  default-reason: "Sem motivo"
