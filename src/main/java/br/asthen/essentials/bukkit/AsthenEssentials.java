@@ -13,65 +13,76 @@ import java.nio.file.Path;
 
 public final class AsthenEssentials extends JavaPlugin {
 
+    private static final String[] COMMANDS = {"money", "pay", "baltop", "eco", "sethome", "home", "delhome",
+            "homes", "setwarp", "delwarp", "warp", "warps", "setspawn", "spawn", "tpa", "tpaccept", "tpdeny",
+            "back", "rtp", "kick", "ban", "tempban", "unban", "mute", "unmute", "aessentials"};
+
     private Economy economy;
     private Places places;
     private Punishments punishments;
     private TpaManager tpa;
-    private Cooldowns cooldowns;
+    private final Cooldowns cooldowns = new Cooldowns();
     private Teleporter teleporter;
+    private String symbol = "R$ ";
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         Path data = getDataFolder().toPath();
-
-        economy = new Economy(data.resolve("economy.json"));
+        applyConfig();
+        long start = Money.parse(String.valueOf(getConfig().get("economy.starting-balance", "100")));
+        economy = new Economy(data.resolve("economy.json"), start < 0 ? 10000 : start);
         places = new Places(data.resolve("places.json"));
-        punishments = new Punishments(data.resolve("punishments.json"), System::currentTimeMillis);
-        tpa = new TpaManager(getConfig().getInt("tpa.timeout-seconds", 60), System::currentTimeMillis);
-        cooldowns = new Cooldowns(System::currentTimeMillis);
-        teleporter = new Teleporter(this);
+        punishments = new Punishments(data.resolve("punishments.json"));
+        tpa = new TpaManager(Math.max(5, getConfig().getInt("teleport.tpa-timeout-seconds", 60)));
+        teleporter = new Teleporter(this, cooldowns);
 
-        getServer().getPluginManager().registerEvents(new Events(this), this);
-
-        Commands cmds = new Commands(this);
-        for (String name : new String[]{
-                "money", "pay", "baltop", "eco",
-                "sethome", "home", "delhome", "homes",
-                "warp", "warps", "setwarp", "delwarp",
-                "spawn", "setspawn",
-                "tpa", "tpaccept", "tpdeny", "back", "rtp",
-                "kick", "ban", "tempban", "unban", "mute", "unmute",
-                "aessentials"
-        }) {
+        Commands handler = new Commands(this);
+        for (String name : COMMANDS) {
             PluginCommand c = getCommand(name);
             if (c != null) {
-                c.setExecutor(cmds);
-                c.setTabCompleter(cmds);
+                c.setExecutor(handler);
+                c.setTabCompleter(handler);
             }
         }
-
-        getLogger().info("AsthenEssentials enabled.");
+        getServer().getPluginManager().registerEvents(new Events(this), this);
+        getLogger().info("AsthenEssentials ativo.");
     }
 
-    @Override
-    public void onDisable() {
-        if (economy != null) economy.save();
-        if (places != null) places.save();
-        if (punishments != null) punishments.save();
-        getLogger().info("AsthenEssentials disabled.");
+    void applyConfig() {
+        symbol = getConfig().getString("economy.currency-symbol", "R$ ");
     }
 
-    public void reload() {
+    void reload() {
         reloadConfig();
-        tpa = new TpaManager(getConfig().getInt("tpa.timeout-seconds", 60), System::currentTimeMillis);
-        getLogger().info("Config reloaded.");
+        applyConfig();
     }
 
-    public Economy economy() { return economy; }
-    public Places places() { return places; }
-    public Punishments punishments() { return punishments; }
-    public TpaManager tpa() { return tpa; }
-    public Cooldowns cooldowns() { return cooldowns; }
-    public Teleporter teleporter() { return teleporter; }
+    Economy economy() {
+        return economy;
+    }
+
+    Places places() {
+        return places;
+    }
+
+    Punishments punishments() {
+        return punishments;
+    }
+
+    TpaManager tpa() {
+        return tpa;
+    }
+
+    Teleporter teleporter() {
+        return teleporter;
+    }
+
+    Cooldowns cooldowns() {
+        return cooldowns;
+    }
+
+    String money(long cents) {
+        return Money.format(cents, symbol);
+    }
 }
