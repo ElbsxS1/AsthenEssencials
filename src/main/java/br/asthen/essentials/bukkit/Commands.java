@@ -31,6 +31,7 @@ final class Commands implements TabExecutor {
         try {
             return switch (cmd.getName().toLowerCase(Locale.ROOT)) {
                 case "menu" -> menu(s);
+                case "bussola" -> compass(s);
                 case "sethome" -> setHome(s, a);
                 case "home" -> home(s, a);
                 case "delhome" -> delHome(s, a);
@@ -86,6 +87,15 @@ final class Commands implements TabExecutor {
 
     private String senderName(CommandSender s) {
         return s instanceof Player p ? p.getName() : "Console";
+    }
+
+    private boolean compass(CommandSender s) {
+        Player p = player(s);
+        if (p == null) return true;
+        if (plugin.menuItem().has(p)) Msg.info(p, "Você já tem a bússola do menu.");
+        else if (plugin.menuItem().giveIfMissing(p)) Msg.ok(p, "Bússola do menu entregue.");
+        else Msg.err(p, "Inventário cheio. Libere um espaço e tente de novo.");
+        return true;
     }
 
     private boolean menu(CommandSender s) {

@@ -12,7 +12,7 @@ import java.nio.file.Path;
 
 public final class AsthenEssentials extends JavaPlugin {
 
-    private static final String[] COMMANDS = {"menu", "sethome", "home", "delhome", "homes", "setwarp", "delwarp",
+    private static final String[] COMMANDS = {"menu", "bussola", "sethome", "home", "delhome", "homes", "setwarp", "delwarp",
             "warp", "warps", "setspawn", "spawn", "tpa", "tpaccept", "tpdeny", "kick", "ban", "tempban", "unban",
             "mute", "unmute", "aessentials"};
 
@@ -22,6 +22,7 @@ public final class AsthenEssentials extends JavaPlugin {
     private final Cooldowns cooldowns = new Cooldowns();
     private Teleporter teleporter;
     private MenuService menus;
+    private MenuItem menuItem;
 
     @Override
     public void onEnable() {
@@ -32,6 +33,7 @@ public final class AsthenEssentials extends JavaPlugin {
         tpa = new TpaManager(Math.max(5, getConfig().getInt("teleport.tpa-timeout-seconds", 60)));
         teleporter = new Teleporter(this, cooldowns);
         menus = new MenuService(this);
+        menuItem = new MenuItem(this);
 
         Commands handler = new Commands(this);
         for (String name : COMMANDS) {
@@ -43,6 +45,7 @@ public final class AsthenEssentials extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new Events(this), this);
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
+        getServer().getPluginManager().registerEvents(new MenuItemListener(this, menuItem), this);
         boolean floodgate = Bukkit.getPluginManager().getPlugin("floodgate") != null;
         getLogger().info("AsthenEssentials ativo. Menu Bedrock (Floodgate): " + (floodgate ? "sim" : "não, usando baú para todos"));
     }
@@ -69,6 +72,10 @@ public final class AsthenEssentials extends JavaPlugin {
 
     Cooldowns cooldowns() {
         return cooldowns;
+    }
+
+    MenuItem menuItem() {
+        return menuItem;
     }
 
     MenuService menus() {

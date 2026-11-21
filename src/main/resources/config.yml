@@ -1,5 +1,8 @@
 # Asthen Essentials
 
+compass:
+  give-on-join: true         # entrega a bússola do menu ao entrar e ao renascer
+
 homes:
   max: 5
 

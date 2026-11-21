@@ -7,10 +7,15 @@ Plugin **Paper 26.3** (Java 25): menu, homes, warps, spawn, TPA e moderação. I
 - **Bedrock:** abre um formulário nativo (precisa do **Floodgate**; sem ele, o baú aparece também no Bedrock via Geyser).
 - Opções: Minhas homes (ir, criar, apagar), Spawn, Pedir teleporte (lista de jogadores online) e, só para operadores, Warps.
 
+## Bússola do menu
+Todo jogador recebe a bússola **Menu Asthen** (hotbar, último slot) ao entrar e ao renascer. Botão direito abre o `/menu`,
+no Java e no Bedrock. Ela não pode ser largada, guardada em baú nem fica como drop de morte. Quem perder pega com `/bussola`.
+Para desligar a entrega automática: `compass.give-on-join: false` no `config.yml`.
+
 ## Comandos
 | Quem | Comandos |
 |---|---|
-| Todos | `/menu`, `/sethome [nome]`, `/home [nome]`, `/delhome <nome>`, `/homes`, `/spawn`, `/tpa <jogador>`, `/tpaccept`, `/tpdeny` |
+| Todos | `/menu`, `/bussola`, `/sethome [nome]`, `/home [nome]`, `/delhome <nome>`, `/homes`, `/spawn`, `/tpa <jogador>`, `/tpaccept`, `/tpdeny` |
 | Só operadores | `/warp`, `/warps`, `/setwarp`, `/delwarp`, `/setspawn`, `/kick`, `/ban`, `/tempban <jogador> <30m\|2h\|7d>`, `/unban`, `/mute [tempo]`, `/unmute`, `/aessentials reload` |
 
 - Máximo de **5 homes** por jogador (`homes.max`).
@@ -27,6 +32,7 @@ Plugin **Paper 26.3** (Java 25): menu, homes, warps, spawn, TPA e moderação. I
 `./scripts/run-tests.sh` roda 26 testes (JDK puro) do núcleo. A camada do Paper/Floodgate foi só compilada contra stubs.
 
 ### Roteiro em jogo
+- [ ] Entrar no servidor dá a bússola; botão direito abre o menu (Java e Bedrock); não dá para largar nem guardar em baú; sobrevive à morte via respawn; `/bussola` repõe.
 - [ ] Java: `/menu` abre o baú; clicar não deixa pegar o item; Homes → Definir home aqui → aparece na lista; Apagar uma home funciona.
 - [ ] Bedrock: `/menu` abre o formulário; os mesmos botões funcionam.
 - [ ] Menu de jogador comum **não** mostra Warps; `/warp` e `/warps` dão "sem permissão"; op vê e usa.

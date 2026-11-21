@@ -12,6 +12,11 @@ commands:
     aliases: [menus]
     usage: /menu
     permission: asthenessentials.menu
+  bussola:
+    description: Pega de novo a bússola do menu.
+    aliases: [compass]
+    usage: /bussola
+    permission: asthenessentials.menu
   sethome:
     description: Define uma home.
     usage: /sethome [nome]
