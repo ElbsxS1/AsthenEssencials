@@ -21,53 +21,12 @@ public final class TestMain {
 
     public static void main(String[] a) throws Exception {
         Path dir = Files.createTempDirectory("ae-test");
-        money(dir);
-        economy(dir);
         places(dir);
         tpa();
         cooldowns();
         punish(dir);
         System.out.println(pass + " ok, " + fail + " falhas");
         if (fail > 0) System.exit(1);
-    }
-
-    static void money(Path d) {
-        check("parse 10", Money.parse("10") == 1000);
-        check("parse 10,5", Money.parse("10,5") == 1050);
-        check("parse 10.05", Money.parse("10.05") == 1005);
-        check("parse invalid", Money.parse("abc") == -1 && Money.parse("-1") == -1 && Money.parse("1,234") == -1);
-        check("parse too big", Money.parse("9999999999") == -1);
-        check("format", Money.format(123456789, "$").equals("$1.234.567,89"));
-        check("format small", Money.format(5, "$").equals("$0,05"));
-    }
-
-    static void economy(Path d) {
-        Path f = d.resolve("eco.json");
-        Economy e = new Economy(f, 10000);
-        UUID x = UUID.randomUUID(), y = UUID.randomUUID();
-        e.touch(x, "Ana");
-        e.touch(y, "Bia");
-        check("start balance", e.balance(x) == 10000);
-        check("pay ok", e.transfer(x, y, 2500) == Economy.Result.OK && e.balance(x) == 7500 && e.balance(y) == 12500);
-        check("pay no funds changes nothing", e.transfer(x, y, 99999) == Economy.Result.NO_FUNDS && e.balance(x) == 7500 && e.balance(y) == 12500);
-        check("pay self", e.transfer(x, x, 100) == Economy.Result.SAME_ACCOUNT);
-        check("pay zero/negative", e.transfer(x, y, 0) == Economy.Result.INVALID_AMOUNT && e.transfer(x, y, -5) == Economy.Result.INVALID_AMOUNT);
-        check("overflow", e.set(y, Money.MAX) == Economy.Result.OK && e.transfer(x, y, 100) == Economy.Result.OVERFLOW && e.balance(x) == 7500);
-        check("take too much", e.take(x, 8000) == Economy.Result.NO_FUNDS && e.balance(x) == 7500);
-        check("give/take", e.give(x, 500) == Economy.Result.OK && e.take(x, 8000) == Economy.Result.OK && e.balance(x) == 0);
-        check("top order", e.top(5).get(0).id().equals(y));
-        check("find by name", y.equals(e.findByName("bia")));
-        Economy again = new Economy(f, 10000);
-        check("persisted", again.balance(y) == Money.MAX && again.balance(x) == 0 && again.nameOf(x).equals("Ana"));
-        // corrupt file is preserved, not crashing
-        try {
-            Path bad = d.resolve("bad.json");
-            Files.writeString(bad, "{not json");
-            Economy c = new Economy(bad, 100);
-            check("corrupt file tolerated", c.balance(x) == 100 && Files.exists(d.resolve("bad.json.bad")));
-        } catch (Exception ex) {
-            check("corrupt file tolerated", false);
-        }
     }
 
     static void places(Path d) {

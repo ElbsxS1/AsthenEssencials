@@ -2,28 +2,16 @@ name: AsthenEssentials
 version: '${project.version}'
 main: br.asthen.essentials.bukkit.AsthenEssentials
 api-version: '26.3'
-description: Economia, homes, warps, spawn, TPA, back, rtp e moderação para o servidor Asthen.
+description: Menu, homes, warps, spawn, TPA e moderação para o servidor Asthen.
 authors: [ElbsxS1]
+softdepend: [floodgate]
 
 commands:
-  money:
-    description: Mostra seu saldo ou o de outro jogador.
-    aliases: [saldo, bal, balance]
-    usage: /money [jogador]
-    permission: asthenessentials.money
-  pay:
-    description: Envia dinheiro a outro jogador.
-    usage: /pay <jogador> <valor>
-    permission: asthenessentials.pay
-  baltop:
-    description: Ranking dos mais ricos.
-    aliases: [topmoney]
-    usage: /baltop
-    permission: asthenessentials.money
-  eco:
-    description: Administra o dinheiro dos jogadores.
-    usage: /eco <give|take|set> <jogador> <valor>
-    permission: asthenessentials.admin
+  menu:
+    description: Abre o menu (baú no Java, formulário no Bedrock).
+    aliases: [menus]
+    usage: /menu
+    permission: asthenessentials.menu
   sethome:
     description: Define uma home.
     usage: /sethome [nome]
@@ -49,13 +37,13 @@ commands:
     usage: /delwarp <nome>
     permission: asthenessentials.admin
   warp:
-    description: Vai para um warp.
+    description: Vai para um warp (só operadores).
     usage: /warp <nome>
-    permission: asthenessentials.warp
+    permission: asthenessentials.admin
   warps:
-    description: Lista os warps.
+    description: Lista os warps (só operadores).
     usage: /warps
-    permission: asthenessentials.warp
+    permission: asthenessentials.admin
   setspawn:
     description: Define o spawn.
     usage: /setspawn
@@ -76,14 +64,6 @@ commands:
     description: Recusa um pedido de teleporte.
     usage: /tpdeny
     permission: asthenessentials.tpa
-  back:
-    description: Volta ao último local (ou à morte).
-    usage: /back
-    permission: asthenessentials.back
-  rtp:
-    description: Teleporte aleatório.
-    usage: /rtp
-    permission: asthenessentials.rtp
   kick:
     description: Expulsa um jogador.
     usage: /kick <jogador> [motivo]
@@ -117,19 +97,11 @@ permissions:
   asthenessentials.admin:
     description: Comandos de administração e moderação.
     default: op
-  asthenessentials.money:
-    default: true
-  asthenessentials.pay:
+  asthenessentials.menu:
     default: true
   asthenessentials.home:
-    default: true
-  asthenessentials.warp:
     default: true
   asthenessentials.spawn:
     default: true
   asthenessentials.tpa:
-    default: true
-  asthenessentials.back:
-    default: true
-  asthenessentials.rtp:
     default: true

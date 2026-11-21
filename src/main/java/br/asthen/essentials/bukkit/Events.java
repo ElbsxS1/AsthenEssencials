@@ -4,15 +4,12 @@ import br.asthen.essentials.core.Punishments;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 
 final class Events implements Listener {
     private final AsthenEssentials plugin;
@@ -33,7 +30,6 @@ final class Events implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        plugin.economy().touch(e.getPlayer().getUniqueId(), e.getPlayer().getName());
         if (!e.getPlayer().hasPlayedBefore() && plugin.places().spawn() != null) {
             var loc = Teleporter.toLocation(plugin.places().spawn());
             if (loc != null) e.getPlayer().teleportAsync(loc);
@@ -53,20 +49,5 @@ final class Events implements Listener {
         e.setCancelled(true);
         String t = m.permanent() ? "" : " (" + Punishments.formatDuration(m.expiresAt() - System.currentTimeMillis()) + ")";
         e.getPlayer().sendMessage(Component.text("Você está silenciado" + t + ". Motivo: " + m.reason(), NamedTextColor.RED));
-    }
-
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        Player p = e.getEntity();
-        plugin.teleporter().rememberBack(p, p.getLocation());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onTeleport(PlayerTeleportEvent e) {
-        // commands remember their own origin; this covers other plugins/vanilla /tp
-        if (e.getCause() == PlayerTeleportEvent.TeleportCause.COMMAND
-                || e.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN) {
-            plugin.teleporter().rememberBack(e.getPlayer(), e.getFrom());
-        }
     }
 }

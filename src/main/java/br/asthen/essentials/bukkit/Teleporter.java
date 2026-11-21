@@ -11,11 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Warmup + cooldown + "back" bookkeeping for every teleport the plugin does. */
+/** Warmup + cooldown for every teleport the plugin does. */
 final class Teleporter {
     private final AsthenEssentials plugin;
     private final Cooldowns cooldowns;
-    private final Map<UUID, Loc> back = new HashMap<>();
     private final Map<UUID, Integer> pending = new HashMap<>();
 
     Teleporter(AsthenEssentials plugin, Cooldowns cooldowns) {
@@ -32,22 +31,13 @@ final class Teleporter {
         return w == null ? null : new Location(w, l.x(), l.y(), l.z(), l.yaw(), l.pitch());
     }
 
-    void rememberBack(Player p, Location from) {
-        if (from != null && from.getWorld() != null) back.put(p.getUniqueId(), toLoc(from));
-    }
-
-    Loc backOf(UUID id) {
-        return back.get(id);
-    }
-
     void forget(UUID id) {
-        back.remove(id);
         Integer t = pending.remove(id);
         if (t != null) Bukkit.getScheduler().cancelTask(t);
     }
 
     /** Teleports after the configured warmup; moving cancels it. Runs on the main thread only. */
-    void go(Player p, Location target, String cooldownKey, String what) {
+    void go(Player p, Location target, String what) {
         if (target == null || target.getWorld() == null) {
             Msg.err(p, "O mundo desse destino não está carregado.");
             return;
@@ -56,14 +46,15 @@ final class Teleporter {
             Msg.err(p, "Você já tem um teleporte em andamento.");
             return;
         }
-        long left = cooldowns.remaining(cooldownKey + ":" + p.getUniqueId());
+        String key = "tp:" + p.getUniqueId();
+        long left = cooldowns.remaining(key);
         if (left > 0) {
             Msg.err(p, "Aguarde " + left + "s para teleportar de novo.");
             return;
         }
-        int warmup = Math.max(0, plugin.getConfig().getInt("teleport.warmup-seconds", 3));
+        int warmup = Math.max(0, plugin.getConfig().getInt("teleport.warmup-seconds", 5));
         if (warmup == 0) {
-            finish(p, target, cooldownKey, what);
+            finish(p, target, key, what);
             return;
         }
         Location start = p.getLocation();
@@ -79,18 +70,15 @@ final class Teleporter {
                 Msg.err(p, "Teleporte cancelado: você se mexeu.");
                 return;
             }
-            finish(p, target, cooldownKey, what);
+            finish(p, target, key, what);
         }, warmup * 20L).getTaskId();
         pending.put(p.getUniqueId(), id);
     }
 
-    private void finish(Player p, Location target, String cooldownKey, String what) {
-        Location from = p.getLocation();
+    private void finish(Player p, Location target, String key, String what) {
         p.teleportAsync(target).thenAccept(ok -> {
             if (ok) {
-                rememberBack(p, from);
-                cooldowns.start(cooldownKey + ":" + p.getUniqueId(),
-                        plugin.getConfig().getInt("teleport.cooldown-seconds", 10));
+                cooldowns.start(key, plugin.getConfig().getInt("teleport.cooldown-seconds", 10));
                 Msg.ok(p, "Teleportado para " + what + ".");
             } else {
                 Msg.err(p, "Não foi possível teleportar.");

@@ -1,8 +1,6 @@
 package br.asthen.essentials.bukkit;
 
-import br.asthen.essentials.core.Economy;
 import br.asthen.essentials.core.Loc;
-import br.asthen.essentials.core.Money;
 import br.asthen.essentials.core.Places;
 import br.asthen.essentials.core.Punishments;
 import br.asthen.essentials.core.TpaManager;
@@ -10,9 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -21,15 +17,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 final class Commands implements TabExecutor {
-    private static final Set<Material> UNSAFE = Set.of(Material.LAVA, Material.WATER, Material.MAGMA_BLOCK,
-            Material.CACTUS, Material.FIRE, Material.SOUL_FIRE, Material.CAMPFIRE, Material.POWDER_SNOW,
-            Material.SWEET_BERRY_BUSH, Material.WITHER_ROSE);
-
     private final AsthenEssentials plugin;
 
     Commands(AsthenEssentials plugin) {
@@ -40,10 +30,7 @@ final class Commands implements TabExecutor {
     public boolean onCommand(CommandSender s, Command cmd, String label, String[] a) {
         try {
             return switch (cmd.getName().toLowerCase(Locale.ROOT)) {
-                case "money" -> money(s, a);
-                case "pay" -> pay(s, a);
-                case "baltop" -> baltop(s);
-                case "eco" -> eco(s, a);
+                case "menu" -> menu(s);
                 case "sethome" -> setHome(s, a);
                 case "home" -> home(s, a);
                 case "delhome" -> delHome(s, a);
@@ -57,8 +44,6 @@ final class Commands implements TabExecutor {
                 case "tpa" -> tpa(s, a);
                 case "tpaccept" -> tpaccept(s);
                 case "tpdeny" -> tpdeny(s);
-                case "back" -> back(s);
-                case "rtp" -> rtp(s);
                 case "kick" -> kick(s, a);
                 case "ban" -> ban(s, a, false);
                 case "tempban" -> ban(s, a, true);
@@ -82,120 +67,31 @@ final class Commands implements TabExecutor {
         return null;
     }
 
-    /** Online player first, then anyone the economy has seen, then the server's cache. Null if unknown. */
+    /** Online player first, then punishment records, then the server's name cache. Null if unknown. */
     private UUID resolve(String name) {
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online.getUniqueId();
-        UUID known = plugin.economy().findByName(name);
-        if (known != null) return known;
+        for (Punishments.Kind k : Punishments.Kind.values()) {
+            UUID known = plugin.punishments().findByName(k, name);
+            if (known != null) return known;
+        }
         OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(name);
         return cached == null ? null : cached.getUniqueId();
     }
 
     private String nameOf(UUID id, String fallback) {
         Player p = Bukkit.getPlayer(id);
-        return p != null ? p.getName() : plugin.economy().has(id) ? plugin.economy().nameOf(id) : fallback;
+        return p != null ? p.getName() : fallback;
     }
 
     private String senderName(CommandSender s) {
         return s instanceof Player p ? p.getName() : "Console";
     }
 
-    // ------------------------------------------------------------------ economy
-    private boolean money(CommandSender s, String[] a) {
-        UUID id;
-        String name;
-        if (a.length >= 1) {
-            id = resolve(a[0]);
-            if (id == null) {
-                Msg.err(s, "Jogador não encontrado.");
-                return true;
-            }
-            name = nameOf(id, a[0]);
-        } else {
-            Player p = player(s);
-            if (p == null) return true;
-            id = p.getUniqueId();
-            name = "Seu";
-        }
-        long bal = plugin.economy().balance(id);
-        Msg.info(s, (a.length >= 1 ? "Saldo de " + name : "Seu saldo") + ": " + plugin.money(bal));
-        return true;
-    }
-
-    private boolean pay(CommandSender s, String[] a) {
+    private boolean menu(CommandSender s) {
         Player p = player(s);
         if (p == null) return true;
-        if (a.length != 2) {
-            Msg.err(s, "Uso: /pay <jogador> <valor>");
-            return true;
-        }
-        UUID to = resolve(a[0]);
-        if (to == null) {
-            Msg.err(s, "Jogador não encontrado.");
-            return true;
-        }
-        long cents = Money.parse(a[1]);
-        if (cents <= 0) {
-            Msg.err(s, "Valor inválido. Exemplo: 25 ou 25,50.");
-            return true;
-        }
-        switch (plugin.economy().transfer(p.getUniqueId(), to, cents)) {
-            case OK -> {
-                String tn = nameOf(to, a[0]);
-                Msg.ok(p, "Você enviou " + plugin.money(cents) + " para " + tn + ".");
-                Player target = Bukkit.getPlayer(to);
-                if (target != null) Msg.ok(target, p.getName() + " enviou " + plugin.money(cents) + " para você.");
-            }
-            case NO_FUNDS -> Msg.err(p, "Saldo insuficiente.");
-            case SAME_ACCOUNT -> Msg.err(p, "Você não pode enviar dinheiro para si mesmo.");
-            case OVERFLOW -> Msg.err(p, "O saldo do destinatário passaria do limite.");
-            default -> Msg.err(p, "Valor inválido.");
-        }
-        return true;
-    }
-
-    private boolean baltop(CommandSender s) {
-        int n = Math.max(1, plugin.getConfig().getInt("economy.baltop-size", 10));
-        List<Economy.Entry> top = plugin.economy().top(n);
-        Msg.info(s, "Mais ricos:");
-        int i = 1;
-        for (Economy.Entry e : top) {
-            s.sendMessage(Component.text(i++ + ". " + e.name() + " - " + plugin.money(e.cents()), NamedTextColor.YELLOW));
-        }
-        return true;
-    }
-
-    private boolean eco(CommandSender s, String[] a) {
-        if (a.length != 3) {
-            Msg.err(s, "Uso: /eco <give|take|set> <jogador> <valor>");
-            return true;
-        }
-        UUID id = resolve(a[1]);
-        if (id == null) {
-            Msg.err(s, "Jogador não encontrado.");
-            return true;
-        }
-        long cents = Money.parse(a[2]);
-        boolean isSet = a[0].equalsIgnoreCase("set");
-        if (cents < 0 || (!isSet && cents == 0)) {
-            Msg.err(s, "Valor inválido.");
-            return true;
-        }
-        Economy.Result r = switch (a[0].toLowerCase(Locale.ROOT)) {
-            case "give" -> plugin.economy().give(id, cents);
-            case "take" -> plugin.economy().take(id, cents);
-            case "set" -> plugin.economy().set(id, cents);
-            default -> null;
-        };
-        if (r == null) {
-            Msg.err(s, "Use give, take ou set.");
-        } else if (r == Economy.Result.OK) {
-            Msg.ok(s, "Saldo de " + nameOf(id, a[1]) + " agora: " + plugin.money(plugin.economy().balance(id)));
-            plugin.getLogger().info(senderName(s) + " /eco " + a[0] + " " + a[1] + " " + a[2]);
-        } else {
-            Msg.err(s, r == Economy.Result.NO_FUNDS ? "O jogador não tem esse saldo." : "Valor fora do limite.");
-        }
+        plugin.menus().openMain(p);
         return true;
     }
 
@@ -204,7 +100,7 @@ final class Commands implements TabExecutor {
         Player p = player(s);
         if (p == null) return true;
         String name = a.length > 0 ? a[0] : "home";
-        int max = plugin.getConfig().getInt("homes.max", 3);
+        int max = plugin.getConfig().getInt("homes.max", 5);
         switch (plugin.places().setHome(p.getUniqueId(), name, Teleporter.toLoc(p.getLocation()), max)) {
             case OK -> Msg.ok(p, "Home '" + name.toLowerCase() + "' definida.");
             case LIMIT -> Msg.err(p, "Limite de " + max + " homes. Apague uma com /delhome.");
@@ -222,7 +118,7 @@ final class Commands implements TabExecutor {
             Msg.err(p, "Home não encontrada. Veja /homes.");
             return true;
         }
-        plugin.teleporter().go(p, Teleporter.toLocation(l), "tp", "home " + name.toLowerCase());
+        plugin.teleporter().go(p, Teleporter.toLocation(l), "home " + name.toLowerCase());
         return true;
     }
 
@@ -281,7 +177,7 @@ final class Commands implements TabExecutor {
             Msg.err(p, "Warp não encontrado. Veja /warps.");
             return true;
         }
-        plugin.teleporter().go(p, Teleporter.toLocation(l), "tp", "warp " + a[0].toLowerCase());
+        plugin.teleporter().go(p, Teleporter.toLocation(l), "warp " + a[0].toLowerCase());
         return true;
     }
 
@@ -304,11 +200,11 @@ final class Commands implements TabExecutor {
         if (p == null) return true;
         Loc l = plugin.places().spawn();
         Location target = l != null ? Teleporter.toLocation(l) : p.getWorld().getSpawnLocation();
-        plugin.teleporter().go(p, target, "tp", "o spawn");
+        plugin.teleporter().go(p, target, "o spawn");
         return true;
     }
 
-    // ------------------------------------------------------------------ tpa / back
+    // ------------------------------------------------------------------ tpa
     private boolean tpa(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
@@ -345,7 +241,7 @@ final class Commands implements TabExecutor {
             return true;
         }
         Msg.ok(t, "Pedido aceito.");
-        plugin.teleporter().go(from, t.getLocation(), "tp", t.getName());
+        plugin.teleporter().go(from, t.getLocation(), t.getName());
         return true;
     }
 
@@ -361,62 +257,6 @@ final class Commands implements TabExecutor {
         Player from = Bukkit.getPlayer(r.from());
         if (from != null) Msg.err(from, t.getName() + " recusou seu pedido.");
         return true;
-    }
-
-    private boolean back(CommandSender s) {
-        Player p = player(s);
-        if (p == null) return true;
-        Loc l = plugin.teleporter().backOf(p.getUniqueId());
-        if (l == null) {
-            Msg.err(p, "Não há local para voltar.");
-            return true;
-        }
-        plugin.teleporter().go(p, Teleporter.toLocation(l), "tp", "o local anterior");
-        return true;
-    }
-
-    // ------------------------------------------------------------------ rtp
-    private boolean rtp(CommandSender s) {
-        Player p = player(s);
-        if (p == null) return true;
-        World w = p.getWorld();
-        if (w.getEnvironment() != World.Environment.NORMAL) {
-            Msg.err(p, "O /rtp só funciona no mundo normal (Overworld).");
-            return true;
-        }
-        long left = plugin.cooldowns().remaining("rtp:" + p.getUniqueId());
-        if (left > 0) {
-            Msg.err(p, "Aguarde " + left + "s para usar /rtp de novo.");
-            return true;
-        }
-        Msg.info(p, "Procurando um lugar seguro...");
-        rtpAttempt(p, w, 0);
-        return true;
-    }
-
-    private void rtpAttempt(Player p, World w, int n) {
-        int max = Math.max(1, plugin.getConfig().getInt("rtp.attempts", 12));
-        if (!p.isOnline()) return;
-        if (n >= max) {
-            Msg.err(p, "Não achei um lugar seguro. Tente de novo.");
-            return;
-        }
-        int r = Math.max(100, plugin.getConfig().getInt("rtp.radius", 3000));
-        Location c = w.getSpawnLocation();
-        int x = c.getBlockX() + ThreadLocalRandom.current().nextInt(-r, r + 1);
-        int z = c.getBlockZ() + ThreadLocalRandom.current().nextInt(-r, r + 1);
-        w.getChunkAtAsync(x >> 4, z >> 4).thenAccept(chunk -> Bukkit.getScheduler().runTask(plugin, () -> {
-            if (!p.isOnline()) return;
-            int y = w.getHighestBlockYAt(x, z);
-            Material ground = w.getBlockAt(x, y, z).getType();
-            if (UNSAFE.contains(ground) || w.getBlockAt(x, y, z).isLiquid() || y <= w.getMinHeight() + 1) {
-                rtpAttempt(p, w, n + 1);
-                return;
-            }
-            Location target = new Location(w, x + 0.5, y + 1, z + 0.5);
-            plugin.cooldowns().start("rtp:" + p.getUniqueId(), plugin.getConfig().getInt("rtp.cooldown-seconds", 300));
-            plugin.teleporter().go(p, target, "rtpgo", "um lugar aleatório");
-        }));
     }
 
     // ------------------------------------------------------------------ moderation
@@ -527,14 +367,11 @@ final class Commands implements TabExecutor {
         String cur = a.length == 0 ? "" : a[a.length - 1].toLowerCase(Locale.ROOT);
         List<String> out = new ArrayList<>();
         boolean playerArg = switch (name) {
-            case "money", "pay", "tpa", "kick", "ban", "tempban", "mute" -> a.length == 1;
-            case "eco" -> a.length == 2;
+            case "tpa", "kick", "ban", "tempban", "mute" -> a.length == 1;
             default -> false;
         };
         if (playerArg) {
             for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
-        } else if (name.equals("eco") && a.length == 1) {
-            out.addAll(List.of("give", "take", "set"));
         } else if ((name.equals("home") || name.equals("delhome")) && a.length == 1 && s instanceof Player p) {
             out.addAll(plugin.places().homeNames(p.getUniqueId()));
         } else if ((name.equals("warp") || name.equals("delwarp")) && a.length == 1) {
