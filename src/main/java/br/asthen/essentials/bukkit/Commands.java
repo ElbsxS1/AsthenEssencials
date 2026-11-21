@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -31,7 +32,7 @@ final class Commands implements TabExecutor {
         try {
             return switch (cmd.getName().toLowerCase(Locale.ROOT)) {
                 case "menu" -> menu(s);
-                case "bussola" -> compass(s);
+                case "bussola" -> menuItem(s);
                 case "sethome" -> setHome(s, a);
                 case "home" -> home(s, a);
                 case "delhome" -> delHome(s, a);
@@ -40,8 +41,6 @@ final class Commands implements TabExecutor {
                 case "delwarp" -> delWarp(s, a);
                 case "warp" -> warp(s, a);
                 case "warps" -> warps(s);
-                case "setspawn" -> setSpawn(s);
-                case "spawn" -> spawn(s);
                 case "tpa" -> tpa(s, a);
                 case "tpaccept" -> tpaccept(s);
                 case "tpdeny" -> tpdeny(s);
@@ -89,11 +88,11 @@ final class Commands implements TabExecutor {
         return s instanceof Player p ? p.getName() : "Console";
     }
 
-    private boolean compass(CommandSender s) {
+    private boolean menuItem(CommandSender s) {
         Player p = player(s);
         if (p == null) return true;
-        if (plugin.menuItem().has(p)) Msg.info(p, "Você já tem a bússola do menu.");
-        else if (plugin.menuItem().giveIfMissing(p)) Msg.ok(p, "Bússola do menu entregue.");
+        if (plugin.menuItem().has(p)) Msg.info(p, "Você já tem o Menu Asthen.");
+        else if (plugin.menuItem().give(p)) Msg.ok(p, "Menu Asthen entregue. Use-o na sobrevivência.");
         else Msg.err(p, "Inventário cheio. Libere um espaço e tente de novo.");
         return true;
     }
@@ -101,14 +100,16 @@ final class Commands implements TabExecutor {
     private boolean menu(CommandSender s) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         plugin.menus().openMain(p);
         return true;
     }
 
-    // ------------------------------------------------------------------ homes / warps / spawn
+    // ------------------------------------------------------------------ homes / warps
     private boolean setHome(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         String name = a.length > 0 ? a[0] : "home";
         int max = plugin.getConfig().getInt("homes.max", 5);
         switch (plugin.places().setHome(p.getUniqueId(), name, Teleporter.toLoc(p.getLocation()), max)) {
@@ -122,6 +123,7 @@ final class Commands implements TabExecutor {
     private boolean home(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         String name = a.length > 0 ? a[0] : "home";
         Loc l = plugin.places().home(p.getUniqueId(), name);
         if (l == null) {
@@ -135,6 +137,7 @@ final class Commands implements TabExecutor {
     private boolean delHome(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         if (a.length != 1) {
             Msg.err(s, "Uso: /delhome <nome>");
             return true;
@@ -147,6 +150,7 @@ final class Commands implements TabExecutor {
     private boolean homes(CommandSender s) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         List<String> h = plugin.places().homeNames(p.getUniqueId());
         Msg.info(p, h.isEmpty() ? "Você não tem homes. Use /sethome." : "Suas homes: " + String.join(", ", h));
         return true;
@@ -197,27 +201,11 @@ final class Commands implements TabExecutor {
         return true;
     }
 
-    private boolean setSpawn(CommandSender s) {
-        Player p = player(s);
-        if (p == null) return true;
-        plugin.places().setSpawn(Teleporter.toLoc(p.getLocation()));
-        Msg.ok(p, "Spawn definido aqui.");
-        return true;
-    }
-
-    private boolean spawn(CommandSender s) {
-        Player p = player(s);
-        if (p == null) return true;
-        Loc l = plugin.places().spawn();
-        Location target = l != null ? Teleporter.toLocation(l) : p.getWorld().getSpawnLocation();
-        plugin.teleporter().go(p, target, "o spawn");
-        return true;
-    }
-
     // ------------------------------------------------------------------ tpa
     private boolean tpa(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
+        if (!plugin.requireAllowedWorld(p)) return true;
         if (a.length != 1) {
             Msg.err(s, "Uso: /tpa <jogador>");
             return true;
@@ -231,6 +219,10 @@ final class Commands implements TabExecutor {
             Msg.err(s, "Você não pode pedir teleporte para si mesmo.");
             return true;
         }
+        if (!plugin.inAllowedWorld(t)) {
+            Msg.err(s, "Esse jogador não está na sobrevivência.");
+            return true;
+        }
         plugin.tpa().create(p.getUniqueId(), t.getUniqueId());
         Msg.ok(p, "Pedido enviado para " + t.getName() + ".");
         Msg.info(t, p.getName() + " quer ir até você. Use /tpaccept ou /tpdeny.");
@@ -240,6 +232,7 @@ final class Commands implements TabExecutor {
     private boolean tpaccept(CommandSender s) {
         Player t = player(s);
         if (t == null) return true;
+        if (!plugin.requireAllowedWorld(t)) return true;
         TpaManager.Request r = plugin.tpa().take(t.getUniqueId());
         if (r == null) {
             Msg.err(t, "Você não tem pedidos pendentes.");
@@ -248,6 +241,10 @@ final class Commands implements TabExecutor {
         Player from = Bukkit.getPlayer(r.from());
         if (from == null) {
             Msg.err(t, "Quem pediu saiu do servidor.");
+            return true;
+        }
+        if (!plugin.inAllowedWorld(from)) {
+            Msg.err(t, "Quem pediu não está mais na sobrevivência.");
             return true;
         }
         Msg.ok(t, "Pedido aceito.");
@@ -361,11 +358,32 @@ final class Commands implements TabExecutor {
     }
 
     private boolean admin(CommandSender s, String[] a) {
-        if (a.length == 1 && a[0].equalsIgnoreCase("reload")) {
-            plugin.reload();
-            Msg.ok(s, "Configuração recarregada.");
-        } else {
-            Msg.err(s, "Uso: /aessentials reload");
+        String sub = a.length == 0 ? "" : a[0].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "reload" -> {
+                plugin.reload();
+                Msg.ok(s, "Configuração recarregada.");
+            }
+            case "setpickup", "removepickup" -> {
+                Player p = player(s);
+                if (p == null) return true;
+                Block b = p.getTargetBlockExact(6);
+                if (b == null) {
+                    Msg.err(p, "Olhe para o bloco (por exemplo, um baú) a até 6 blocos.");
+                    return true;
+                }
+                String w = b.getWorld().getName();
+                if (sub.equals("setpickup")) {
+                    if (plugin.pickups().add(w, b.getX(), b.getY(), b.getZ()))
+                        Msg.ok(p, "Pronto: clicar com o botão direito nesse bloco entrega o Menu Asthen.");
+                    else Msg.err(p, "Esse bloco já entrega o Menu Asthen.");
+                } else if (plugin.pickups().remove(w, b.getX(), b.getY(), b.getZ())) {
+                    Msg.ok(p, "Esse bloco não entrega mais o Menu Asthen.");
+                } else {
+                    Msg.err(p, "Esse bloco não estava registrado.");
+                }
+            }
+            default -> Msg.err(s, "Uso: /aessentials <reload|setpickup|removepickup>");
         }
         return true;
     }
@@ -387,7 +405,7 @@ final class Commands implements TabExecutor {
         } else if ((name.equals("warp") || name.equals("delwarp")) && a.length == 1) {
             out.addAll(plugin.places().warpNames());
         } else if (name.equals("aessentials") && a.length == 1) {
-            out.add("reload");
+            out.addAll(List.of("reload", "setpickup", "removepickup"));
         }
         out.removeIf(x -> !x.toLowerCase(Locale.ROOT).startsWith(cur));
         return out;

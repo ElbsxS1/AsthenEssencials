@@ -43,9 +43,12 @@ final class MenuService {
 
     // ------------------------------------------------------------------ menus
     void openMain(Player p) {
+        if (!plugin.requireAllowedWorld(p)) return;
         List<Menu.Entry> e = new ArrayList<>();
         e.add(new Menu.Entry("Minhas homes", Material.RED_BED, "Ir, criar ou apagar suas homes.", () -> openHomes(p)));
-        e.add(new Menu.Entry("Spawn", Material.ENDER_PEARL, "Ir para o spawn.", () -> run(p, "spawn")));
+        if (Bukkit.getPluginManager().getPlugin("LobbyGuard") != null) {
+            e.add(new Menu.Entry("Voltar ao lobby", Material.ENDER_PEARL, "Volta ao lobby (fique parado 5s).", () -> run(p, "lob")));
+        }
         e.add(new Menu.Entry("Pedir teleporte", Material.PLAYER_HEAD, "Pedir para ir até um jogador.", () -> openPlayers(p)));
         if (p.hasPermission("asthenessentials.admin")) {
             e.add(new Menu.Entry("Warps", Material.BEACON, "Locais do servidor (só operadores).", () -> openWarps(p)));

@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 final class Events implements Listener {
@@ -26,14 +25,6 @@ final class Events implements Listener {
                 : "por mais " + Punishments.formatDuration(b.expiresAt() - System.currentTimeMillis());
         e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
                 Component.text("Você está banido " + until + ".\nMotivo: " + b.reason(), NamedTextColor.RED));
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
-        if (!e.getPlayer().hasPlayedBefore() && plugin.places().spawn() != null) {
-            var loc = Teleporter.toLocation(plugin.places().spawn());
-            if (loc != null) e.getPlayer().teleportAsync(loc);
-        }
     }
 
     @EventHandler

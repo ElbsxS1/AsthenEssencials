@@ -1,22 +1,36 @@
 # Asthen Essentials
 
-Plugin **Paper 26.3** (Java 25): menu, homes, warps, spawn, TPA e moderação. Independente do DiscordKitBridge.
+Plugin **Paper 26.3** (Java 25): menu, homes, warps, TPA e moderação. Independente do DiscordKitBridge e compatível com o LobbyGuard.
 
 ## Menu — `/menu`
 - **Java:** abre um menu de baú (os itens são botões; nada pode ser pego).
 - **Bedrock:** abre um formulário nativo (precisa do **Floodgate**; sem ele, o baú aparece também no Bedrock via Geyser).
-- Opções: Minhas homes (ir, criar, apagar), Spawn, Pedir teleporte (lista de jogadores online) e, só para operadores, Warps.
+- Opções: Minhas homes (ir, criar, apagar), Voltar ao lobby (se houver LobbyGuard), Pedir teleporte (lista de jogadores online) e, só para operadores, Warps.
 
-## Bússola do menu
-Todo jogador recebe a bússola **Menu Asthen** (hotbar, último slot) ao entrar e ao renascer. Botão direito abre o `/menu`,
-no Java e no Bedrock. Ela não pode ser largada, guardada em baú nem fica como drop de morte. Quem perder pega com `/bussola`.
-Para desligar a entrega automática: `compass.give-on-join: false` no `config.yml`.
+## Item do menu
+O item **Menu Asthen** (Estrela do Nether) é um item comum: o jogador pode largar, guardar e perder à vontade.
+Não há entrega automática. Ele é pego de duas formas:
+- `/bussola` (alias `/menuitem`), em qualquer mundo;
+- clicando com o botão direito em um **bloco de retirada** (por exemplo, um baú no lobby). O admin olha para o bloco e usa
+  `/aessentials setpickup` (e `/aessentials removepickup` para desfazer). O baú não abre, só entrega o item. Quebrar o bloco o desregistra.
+
+Botão direito com o item abre o `/menu` (baú no Java, formulário no Bedrock), **só na sobrevivência**.
+O material fica em `menu-item.material`. **Não use `COMPASS`**: o WorldEdit usa a bússola como varinha de navegação e teleporta
+o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 são removidas do inventário quando o jogador entra.
+
+## Compatibilidade com o LobbyGuard
+- Menu, `/home`, `/sethome`, `/delhome`, `/homes` e `/tpa` só funcionam nos mundos de `worlds.allowed` (padrão: `survival`),
+  ou seja, nada disso vale no lobby. `/warp` e `/warps` seguem só para operadores, em qualquer mundo.
+- O Asthen Essentials **não tem `/spawn`, `/setspawn` nem teleporte ao entrar**: o spawn e a entrada ficam com o LobbyGuard.
+  Com o LobbyGuard instalado, o menu mostra "Voltar ao lobby" (roda o `/lob` dele, com a espera de 5s).
+- Os teleportes do Asthen Essentials disparam o evento padrão de teleporte, então o LobbyGuard continua salvando o último
+  local da sobrevivência normalmente.
 
 ## Comandos
 | Quem | Comandos |
 |---|---|
-| Todos | `/menu`, `/bussola`, `/sethome [nome]`, `/home [nome]`, `/delhome <nome>`, `/homes`, `/spawn`, `/tpa <jogador>`, `/tpaccept`, `/tpdeny` |
-| Só operadores | `/warp`, `/warps`, `/setwarp`, `/delwarp`, `/setspawn`, `/kick`, `/ban`, `/tempban <jogador> <30m\|2h\|7d>`, `/unban`, `/mute [tempo]`, `/unmute`, `/aessentials reload` |
+| Todos | `/menu`, `/bussola`, `/sethome [nome]`, `/home [nome]`, `/delhome <nome>`, `/homes`, `/tpa <jogador>`, `/tpaccept`, `/tpdeny` |
+| Só operadores | `/warp`, `/warps`, `/setwarp`, `/delwarp`, `/kick`, `/ban`, `/tempban <jogador> <30m\|2h\|7d>`, `/unban`, `/mute [tempo]`, `/unmute`, `/aessentials reload\|setpickup\|removepickup` |
 
 - Máximo de **5 homes** por jogador (`homes.max`).
 - Teleportes têm **espera de 5s**, cancelada se o jogador se mexer (`teleport.warmup-seconds`), e intervalo de 10s.
@@ -29,15 +43,17 @@ Para desligar a entrega automática: `compass.give-on-join: false` no `config.ym
 3. Dados em `plugins/AsthenEssentials/`: `places.json`, `punishments.json`.
 
 ## Testes
-`./scripts/run-tests.sh` roda 26 testes (JDK puro) do núcleo. A camada do Paper/Floodgate foi só compilada contra stubs.
+`./scripts/run-tests.sh` roda 32 testes (JDK puro) do núcleo. A camada do Paper/Floodgate foi só compilada contra stubs.
 
 ### Roteiro em jogo
-- [ ] Entrar no servidor dá a bússola; botão direito abre o menu (Java e Bedrock); não dá para largar nem guardar em baú; sobrevive à morte via respawn; `/bussola` repõe.
-- [ ] Java: `/menu` abre o baú; clicar não deixa pegar o item; Homes → Definir home aqui → aparece na lista; Apagar uma home funciona.
-- [ ] Bedrock: `/menu` abre o formulário; os mesmos botões funcionam.
+- [ ] No lobby, `/aessentials setpickup` olhando para um baú; clicar nele entrega o Menu Asthen (não abre o baú); clicar de novo diz que já tem.
+- [ ] Clicar com a Estrela do Nether **não teleporta** (WorldEdit); no lobby avisa que só funciona na sobrevivência.
+- [ ] Na sobrevivência, botão direito abre o menu (Java: baú; Bedrock: formulário). O item pode ser largado e guardado em baú.
+- [ ] `/home`, `/sethome`, `/tpa`, `/menu` no lobby: "só funciona na sobrevivência". `/spawn` não existe.
+- [ ] Menu > Voltar ao lobby roda o `/lob` do LobbyGuard.
 - [ ] Menu de jogador comum **não** mostra Warps; `/warp` e `/warps` dão "sem permissão"; op vê e usa.
-- [ ] 6ª home é recusada; teleporte espera 5s e cancela se andar.
-- [ ] `/tpa` + `/tpaccept`; `/tempban Fulano 1m`; `/mute Fulano 1m`; reiniciar mantém homes, warps, bans e mutes.
+- [ ] 6ª home é recusada; teleporte espera 5s e cancela se andar; `/tpa` + `/tpaccept` entre dois jogadores na sobrevivência.
+- [ ] `/tempban Fulano 1m` e `/mute Fulano 1m`; reiniciar mantém homes, warps, blocos de retirada, bans e mutes.
 
 ## Créditos
 Inspirado em *Minecraft Essentials* de Paoeni (MIT). Nenhum código ou recurso do add-on foi copiado.

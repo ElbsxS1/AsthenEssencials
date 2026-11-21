@@ -2,9 +2,9 @@ name: AsthenEssentials
 version: '${project.version}'
 main: br.asthen.essentials.bukkit.AsthenEssentials
 api-version: '26.3'
-description: Menu, homes, warps, spawn, TPA e moderação para o servidor Asthen.
+description: Menu, homes, warps, TPA e moderação para o servidor Asthen.
 authors: [ElbsxS1]
-softdepend: [floodgate]
+softdepend: [floodgate, LobbyGuard]
 
 commands:
   menu:
@@ -13,8 +13,8 @@ commands:
     usage: /menu
     permission: asthenessentials.menu
   bussola:
-    description: Pega de novo a bússola do menu.
-    aliases: [compass]
+    description: Pega o item do menu (Menu Asthen).
+    aliases: [menuitem]
     usage: /bussola
     permission: asthenessentials.menu
   sethome:
@@ -49,14 +49,6 @@ commands:
     description: Lista os warps (só operadores).
     usage: /warps
     permission: asthenessentials.admin
-  setspawn:
-    description: Define o spawn.
-    usage: /setspawn
-    permission: asthenessentials.admin
-  spawn:
-    description: Vai para o spawn.
-    usage: /spawn
-    permission: asthenessentials.spawn
   tpa:
     description: Pede para ir até outro jogador.
     usage: /tpa <jogador>
@@ -95,7 +87,7 @@ commands:
     permission: asthenessentials.admin
   aessentials:
     description: Recarrega a configuração.
-    usage: /aessentials reload
+    usage: /aessentials <reload|setpickup|removepickup>
     permission: asthenessentials.admin
 
 permissions:
@@ -105,8 +97,6 @@ permissions:
   asthenessentials.menu:
     default: true
   asthenessentials.home:
-    default: true
-  asthenessentials.spawn:
     default: true
   asthenessentials.tpa:
     default: true

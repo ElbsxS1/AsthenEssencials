@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-/** Homes (per player), warps (global) and the spawn point. Names are case-insensitive. */
+/** Homes (per player) and warps (global). Names are case-insensitive. */
 public final class Places {
 
     public enum Result { OK, INVALID_NAME, LIMIT, NOT_FOUND }
@@ -16,7 +16,6 @@ public final class Places {
     private final Path file;
     private final Map<UUID, Map<String, Loc>> homes = new LinkedHashMap<>();
     private final Map<String, Loc> warps = new TreeMap<>();
-    private Loc spawn;
 
     public Places(Path file) {
         this.file = file;
@@ -41,7 +40,6 @@ public final class Places {
             Loc l = Loc.fromMap(JsonFile.obj(e.getValue()));
             if (l != null) warps.put(e.getKey().toLowerCase(), l);
         }
-        spawn = Loc.fromMap(JsonFile.obj(root.get("spawn")));
     }
 
     private synchronized void save() {
@@ -56,7 +54,6 @@ public final class Places {
         Map<String, Object> w = new LinkedHashMap<>();
         warps.forEach((n, l) -> w.put(n, l.toMap()));
         root.put("warps", w);
-        if (spawn != null) root.put("spawn", spawn.toMap());
         JsonFile.save(file, root);
     }
 
@@ -108,15 +105,5 @@ public final class Places {
 
     public synchronized List<String> warpNames() {
         return new ArrayList<>(warps.keySet());
-    }
-
-    // ---- spawn
-    public synchronized void setSpawn(Loc loc) {
-        spawn = loc;
-        save();
-    }
-
-    public synchronized Loc spawn() {
-        return spawn;
     }
 }

@@ -23,6 +23,7 @@ public final class TestMain {
         Path dir = Files.createTempDirectory("ae-test");
         places(dir);
         tpa();
+        pickups(dir);
         cooldowns();
         punish(dir);
         System.out.println(pass + " ok, " + fail + " falhas");
@@ -41,9 +42,8 @@ public final class TestMain {
         check("invalid names", p.setHome(u, "../x", l, 5) == Places.Result.INVALID_NAME
                 && p.setWarp("a b", l) == Places.Result.INVALID_NAME);
         check("warp", p.setWarp("Loja", l) == Places.Result.OK && p.warp("loja") != null);
-        p.setSpawn(l);
         Places again = new Places(f);
-        check("persisted", again.home(u, "casa").equals(l) && again.warp("LOJA").equals(l) && again.spawn().equals(l));
+        check("persisted", again.home(u, "casa").equals(l) && again.warp("LOJA").equals(l));
         check("delhome", again.delHome(u, "casa") == Places.Result.OK && again.delHome(u, "casa") == Places.Result.NOT_FOUND);
         check("delwarp", again.delWarp("loja") == Places.Result.OK && again.warpNames().isEmpty());
     }
@@ -97,5 +97,17 @@ public final class TestMain {
         check("duration invalid", Punishments.parseDuration("0m") == -1 && Punishments.parseDuration("5x") == -1
                 && Punishments.parseDuration("999d") == -1 && Punishments.parseDuration("m") == -1);
         check("duration format", Punishments.formatDuration(90_000).equals("1min") && Punishments.formatDuration(3_700_000).equals("1h 1min"));
+    }
+
+    static void pickups(Path d) {
+        Path f = d.resolve("pickups.json");
+        Pickups p = new Pickups(f);
+        check("pickup empty", !p.has("survival", 1, 2, 3));
+        check("pickup add", p.add("lobby", 10, 64, -5) && !p.add("lobby", 10, 64, -5));
+        check("pickup has", p.has("lobby", 10, 64, -5) && !p.has("lobby", 10, 65, -5) && !p.has("other", 10, 64, -5));
+        check("pickup world case-insens", p.has("LOBBY", 10, 64, -5));
+        Pickups again = new Pickups(f);
+        check("pickup persisted", again.has("lobby", 10, 64, -5) && again.count() == 1);
+        check("pickup remove", again.remove("lobby", 10, 64, -5) && !again.remove("lobby", 10, 64, -5) && again.count() == 0);
     }
 }

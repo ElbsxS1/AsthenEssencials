@@ -1,11 +1,13 @@
 package br.asthen.essentials.bukkit;
 
 import br.asthen.essentials.core.Cooldowns;
+import br.asthen.essentials.core.Pickups;
 import br.asthen.essentials.core.Places;
 import br.asthen.essentials.core.Punishments;
 import br.asthen.essentials.core.TpaManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
@@ -13,10 +15,11 @@ import java.nio.file.Path;
 public final class AsthenEssentials extends JavaPlugin {
 
     private static final String[] COMMANDS = {"menu", "bussola", "sethome", "home", "delhome", "homes", "setwarp", "delwarp",
-            "warp", "warps", "setspawn", "spawn", "tpa", "tpaccept", "tpdeny", "kick", "ban", "tempban", "unban",
+            "warp", "warps", "tpa", "tpaccept", "tpdeny", "kick", "ban", "tempban", "unban",
             "mute", "unmute", "aessentials"};
 
     private Places places;
+    private Pickups pickups;
     private Punishments punishments;
     private TpaManager tpa;
     private final Cooldowns cooldowns = new Cooldowns();
@@ -29,6 +32,7 @@ public final class AsthenEssentials extends JavaPlugin {
         saveDefaultConfig();
         Path data = getDataFolder().toPath();
         places = new Places(data.resolve("places.json"));
+        pickups = new Pickups(data.resolve("pickups.json"));
         punishments = new Punishments(data.resolve("punishments.json"));
         tpa = new TpaManager(Math.max(5, getConfig().getInt("teleport.tpa-timeout-seconds", 60)));
         teleporter = new Teleporter(this, cooldowns);
@@ -52,6 +56,25 @@ public final class AsthenEssentials extends JavaPlugin {
 
     void reload() {
         reloadConfig();
+    }
+
+    Pickups pickups() {
+        return pickups;
+    }
+
+    /** Menu, homes and /tpa only work in these worlds (config worlds.allowed, default: survival). */
+    boolean inAllowedWorld(Player p) {
+        for (String w : getConfig().getStringList("worlds.allowed")) {
+            if (w.equalsIgnoreCase(p.getWorld().getName())) return true;
+        }
+        return false;
+    }
+
+    /** Like inAllowedWorld, but tells the player why not. */
+    boolean requireAllowedWorld(Player p) {
+        if (inAllowedWorld(p)) return true;
+        Msg.err(p, "Isso só funciona na sobrevivência.");
+        return false;
     }
 
     Places places() {

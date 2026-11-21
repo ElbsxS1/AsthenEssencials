@@ -1,7 +1,10 @@
 # Asthen Essentials
 
-compass:
-  give-on-join: true         # entrega a bússola do menu ao entrar e ao renascer
+menu-item:
+  material: NETHER_STAR      # NÃO use COMPASS: o WorldEdit usa a bússola para teleportar ao bloco olhado
+
+worlds:
+  allowed: [survival]        # mundos onde menu, homes e /tpa funcionam (o lobby fica de fora)
 
 homes:
   max: 5
