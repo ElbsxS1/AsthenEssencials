@@ -3,6 +3,9 @@
 menu-item:
   material: NETHER_STAR      # NÃO use COMPASS: o WorldEdit usa a bússola para teleportar ao bloco olhado
 
+admin-item:
+  material: BLAZE_ROD        # item do Painel Admin (pego com /adminitem; só funciona para quem tem asthenessentials.admin)
+
 worlds:
   allowed: [survival]        # mundos onde menu, homes e /tpa funcionam (o lobby fica de fora)
 

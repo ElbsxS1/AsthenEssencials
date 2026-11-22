@@ -33,14 +33,12 @@ final class Commands implements TabExecutor {
             return switch (cmd.getName().toLowerCase(Locale.ROOT)) {
                 case "menu" -> menu(s);
                 case "bussola" -> menuItem(s);
+                case "adminitem" -> adminItem(s);
+                case "painel" -> adminPanel(s);
                 case "sethome" -> setHome(s, a);
                 case "home" -> home(s, a);
                 case "delhome" -> delHome(s, a);
                 case "homes" -> homes(s);
-                case "setwarp" -> setWarp(s, a);
-                case "delwarp" -> delWarp(s, a);
-                case "warp" -> warp(s, a);
-                case "warps" -> warps(s);
                 case "tpa" -> tpa(s, a);
                 case "tpaccept" -> tpaccept(s);
                 case "tpdeny" -> tpdeny(s);
@@ -105,7 +103,23 @@ final class Commands implements TabExecutor {
         return true;
     }
 
-    // ------------------------------------------------------------------ homes / warps
+    private boolean adminItem(CommandSender s) {
+        Player p = player(s);
+        if (p == null) return true;
+        if (plugin.adminItem().has(p)) Msg.info(p, "Você já tem o Painel Admin.");
+        else if (plugin.adminItem().give(p)) Msg.ok(p, "Painel Admin entregue. Botão direito para abrir.");
+        else Msg.err(p, "Inventário cheio. Libere um espaço e tente de novo.");
+        return true;
+    }
+
+    private boolean adminPanel(CommandSender s) {
+        Player p = player(s);
+        if (p == null) return true;
+        plugin.adminMenu().openMain(p);
+        return true;
+    }
+
+    // ------------------------------------------------------------------ homes
     private boolean setHome(CommandSender s, String[] a) {
         Player p = player(s);
         if (p == null) return true;
@@ -153,51 +167,6 @@ final class Commands implements TabExecutor {
         if (!plugin.requireAllowedWorld(p)) return true;
         List<String> h = plugin.places().homeNames(p.getUniqueId());
         Msg.info(p, h.isEmpty() ? "Você não tem homes. Use /sethome." : "Suas homes: " + String.join(", ", h));
-        return true;
-    }
-
-    private boolean setWarp(CommandSender s, String[] a) {
-        Player p = player(s);
-        if (p == null) return true;
-        if (a.length != 1) {
-            Msg.err(s, "Uso: /setwarp <nome>");
-            return true;
-        }
-        if (plugin.places().setWarp(a[0], Teleporter.toLoc(p.getLocation())) == Places.Result.OK)
-            Msg.ok(p, "Warp '" + a[0].toLowerCase() + "' salvo.");
-        else Msg.err(p, "Nome inválido (use letras, números, _ ou -, até 24).");
-        return true;
-    }
-
-    private boolean delWarp(CommandSender s, String[] a) {
-        if (a.length != 1) {
-            Msg.err(s, "Uso: /delwarp <nome>");
-            return true;
-        }
-        if (plugin.places().delWarp(a[0]) == Places.Result.OK) Msg.ok(s, "Warp apagado.");
-        else Msg.err(s, "Warp não encontrado.");
-        return true;
-    }
-
-    private boolean warp(CommandSender s, String[] a) {
-        Player p = player(s);
-        if (p == null) return true;
-        if (a.length != 1) {
-            Msg.err(s, "Uso: /warp <nome>. Veja /warps.");
-            return true;
-        }
-        Loc l = plugin.places().warp(a[0]);
-        if (l == null) {
-            Msg.err(p, "Warp não encontrado. Veja /warps.");
-            return true;
-        }
-        plugin.teleporter().go(p, Teleporter.toLocation(l), "warp " + a[0].toLowerCase());
-        return true;
-    }
-
-    private boolean warps(CommandSender s) {
-        List<String> w = plugin.places().warpNames();
-        Msg.info(s, w.isEmpty() ? "Nenhum warp criado." : "Warps: " + String.join(", ", w));
         return true;
     }
 
@@ -402,8 +371,6 @@ final class Commands implements TabExecutor {
             for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
         } else if ((name.equals("home") || name.equals("delhome")) && a.length == 1 && s instanceof Player p) {
             out.addAll(plugin.places().homeNames(p.getUniqueId()));
-        } else if ((name.equals("warp") || name.equals("delwarp")) && a.length == 1) {
-            out.addAll(plugin.places().warpNames());
         } else if (name.equals("aessentials") && a.length == 1) {
             out.addAll(List.of("reload", "setpickup", "removepickup"));
         }

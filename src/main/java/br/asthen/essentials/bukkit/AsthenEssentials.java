@@ -14,8 +14,8 @@ import java.nio.file.Path;
 
 public final class AsthenEssentials extends JavaPlugin {
 
-    private static final String[] COMMANDS = {"menu", "bussola", "sethome", "home", "delhome", "homes", "setwarp", "delwarp",
-            "warp", "warps", "tpa", "tpaccept", "tpdeny", "kick", "ban", "tempban", "unban",
+    private static final String[] COMMANDS = {"menu", "bussola", "adminitem", "painel", "sethome", "home", "delhome", "homes",
+            "tpa", "tpaccept", "tpdeny", "kick", "ban", "tempban", "unban",
             "mute", "unmute", "aessentials"};
 
     private Places places;
@@ -26,6 +26,9 @@ public final class AsthenEssentials extends JavaPlugin {
     private Teleporter teleporter;
     private MenuService menus;
     private MenuItem menuItem;
+    private AdminItem adminItem;
+    private AdminMenu adminMenu;
+    private Prompts prompts;
 
     @Override
     public void onEnable() {
@@ -38,6 +41,9 @@ public final class AsthenEssentials extends JavaPlugin {
         teleporter = new Teleporter(this, cooldowns);
         menus = new MenuService(this);
         menuItem = new MenuItem(this);
+        adminItem = new AdminItem(this);
+        adminMenu = new AdminMenu(this);
+        prompts = new Prompts(this);
 
         Commands handler = new Commands(this);
         for (String name : COMMANDS) {
@@ -47,9 +53,12 @@ public final class AsthenEssentials extends JavaPlugin {
                 c.setTabCompleter(handler);
             }
         }
+        // Prompts first: it must see a chat line before the mute check does
+        getServer().getPluginManager().registerEvents(prompts, this);
         getServer().getPluginManager().registerEvents(new Events(this), this);
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuItemListener(this, menuItem), this);
+        getServer().getPluginManager().registerEvents(new AdminItemListener(this, adminItem), this);
         boolean floodgate = Bukkit.getPluginManager().getPlugin("floodgate") != null;
         getLogger().info("AsthenEssentials ativo. Menu Bedrock (Floodgate): " + (floodgate ? "sim" : "não, usando baú para todos"));
     }
@@ -103,5 +112,17 @@ public final class AsthenEssentials extends JavaPlugin {
 
     MenuService menus() {
         return menus;
+    }
+
+    AdminItem adminItem() {
+        return adminItem;
+    }
+
+    AdminMenu adminMenu() {
+        return adminMenu;
+    }
+
+    Prompts prompts() {
+        return prompts;
     }
 }

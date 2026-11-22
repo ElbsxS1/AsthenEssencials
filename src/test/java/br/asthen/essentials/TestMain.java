@@ -22,6 +22,7 @@ public final class TestMain {
     public static void main(String[] a) throws Exception {
         Path dir = Files.createTempDirectory("ae-test");
         places(dir);
+        legacyWarps(dir);
         tpa();
         pickups(dir);
         cooldowns();
@@ -40,12 +41,27 @@ public final class TestMain {
         check("sethome same name overwrites at limit", p.setHome(u, "casa", l, 1) == Places.Result.OK);
         check("home limit", p.setHome(u, "outra", l, 1) == Places.Result.LIMIT);
         check("invalid names", p.setHome(u, "../x", l, 5) == Places.Result.INVALID_NAME
-                && p.setWarp("a b", l) == Places.Result.INVALID_NAME);
-        check("warp", p.setWarp("Loja", l) == Places.Result.OK && p.warp("loja") != null);
+                && p.setHome(u, "a b", l, 5) == Places.Result.INVALID_NAME
+                && p.setHome(u, "", l, 5) == Places.Result.INVALID_NAME
+                && p.setHome(u, "x".repeat(25), l, 5) == Places.Result.INVALID_NAME);
+        check("accented names", Names.validPlace("Mineração") && Names.validPlace("casa_do-zé") && !Names.validPlace("casa!"));
         Places again = new Places(f);
-        check("persisted", again.home(u, "casa").equals(l) && again.warp("LOJA").equals(l));
+        check("persisted", again.home(u, "casa").equals(l));
+        check("accented home persisted", again.setHome(u, "Cabeça", l, 5) == Places.Result.OK
+                && new Places(f).home(u, "cabeça") != null);
         check("delhome", again.delHome(u, "casa") == Places.Result.OK && again.delHome(u, "casa") == Places.Result.NOT_FOUND);
-        check("delwarp", again.delWarp("loja") == Places.Result.OK && again.warpNames().isEmpty());
+        check("homeNames", again.homeNames(u).equals(java.util.List.of("cabeça")));
+    }
+
+    static void legacyWarps(Path d) throws Exception {
+        Path f = d.resolve("old-places.json");
+        UUID u = UUID.randomUUID();
+        Files.writeString(f, "{\"homes\":{\"" + u + "\":{\"casa\":{\"world\":\"w\",\"x\":1,\"y\":2,\"z\":3,\"yaw\":0,\"pitch\":0}}},"
+                + "\"warps\":{\"loja\":{\"world\":\"w\",\"x\":9,\"y\":9,\"z\":9,\"yaw\":0,\"pitch\":0}}}");
+        Places p = new Places(f);
+        check("legacy file: homes still load", p.home(u, "casa") != null);
+        p.setHome(u, "outra", p.home(u, "casa"), 5);
+        check("legacy file: warps dropped on save", !Files.readString(f).contains("warps"));
     }
 
     static void tpa() {
@@ -92,6 +108,12 @@ public final class TestMain {
         check("default reason", p.active(Punishments.Kind.MUTE, u).reason().equals("Sem motivo"));
         Punishments again = new Punishments(f, now::get);
         check("persisted", again.active(Punishments.Kind.MUTE, u) != null && u.equals(again.findByName(Punishments.Kind.MUTE, "zed")));
+        check("list active", again.list(Punishments.Kind.MUTE).size() == 1 && again.list(Punishments.Kind.BAN).isEmpty());
+        UUID u2 = UUID.randomUUID();
+        again.add(Punishments.Kind.BAN, u2, "Temp", "x", "Admin", 1_000);
+        check("list keeps unexpired ban", again.list(Punishments.Kind.BAN).size() == 1);
+        now.set(now.get() + 5_000);
+        check("list drops expired ban", again.list(Punishments.Kind.BAN).isEmpty());
         check("remove", again.remove(Punishments.Kind.MUTE, u) && !again.remove(Punishments.Kind.MUTE, u));
         check("duration parse", Punishments.parseDuration("30m") == 1_800_000 && Punishments.parseDuration("1w") == 604_800_000L);
         check("duration invalid", Punishments.parseDuration("0m") == -1 && Punishments.parseDuration("5x") == -1

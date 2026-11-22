@@ -6,9 +6,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.Plugin;
 
-/** Menu items are buttons: nothing can be taken, moved or dropped. */
+/** Menu items are buttons: nothing can be taken, moved or dropped. The same goes for the read-only admin views. */
 final class MenuListener implements Listener {
     private final Plugin plugin;
 
@@ -18,7 +19,19 @@ final class MenuListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent e) {
-        if (!(e.getView().getTopInventory().getHolder() instanceof JavaMenu.Holder holder)) return;
+        InventoryHolder top = e.getView().getTopInventory().getHolder();
+
+        if (top instanceof InspectMenu.Holder view) {
+            e.setCancelled(true); // read-only: no taking, moving, swapping or shift-clicking
+            if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
+            if (e.getSlot() == view.backSlot && e.getWhoClicked() instanceof Player p) {
+                p.closeInventory();
+                Bukkit.getScheduler().runTask(plugin, view.back);
+            }
+            return;
+        }
+
+        if (!(top instanceof JavaMenu.Holder holder)) return;
         e.setCancelled(true); // also blocks shift-click from the player's own inventory
         if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
         int slot = e.getSlot();
@@ -30,6 +43,7 @@ final class MenuListener implements Listener {
 
     @EventHandler
     public void onDrag(InventoryDragEvent e) {
-        if (e.getView().getTopInventory().getHolder() instanceof JavaMenu.Holder) e.setCancelled(true);
+        InventoryHolder top = e.getView().getTopInventory().getHolder();
+        if (top instanceof JavaMenu.Holder || top instanceof InspectMenu.Holder) e.setCancelled(true);
     }
 }

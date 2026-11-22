@@ -3,7 +3,8 @@ package br.asthen.essentials.core;
 import java.util.regex.Pattern;
 
 public final class Names {
-    private static final Pattern PLACE = Pattern.compile("^[A-Za-z0-9_-]{1,24}$");
+    /** Letters (accents included), digits, _ and -, up to 24 characters. */
+    private static final Pattern PLACE = Pattern.compile("^[\\p{L}\\p{N}_-]{1,24}$");
 
     private Names() {
     }

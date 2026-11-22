@@ -8,14 +8,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-/** Homes (per player) and warps (global). Names are case-insensitive. */
+/** Homes (per player). Names are case-insensitive. */
 public final class Places {
 
     public enum Result { OK, INVALID_NAME, LIMIT, NOT_FOUND }
 
     private final Path file;
     private final Map<UUID, Map<String, Loc>> homes = new LinkedHashMap<>();
-    private final Map<String, Loc> warps = new TreeMap<>();
 
     public Places(Path file) {
         this.file = file;
@@ -23,6 +22,7 @@ public final class Places {
     }
 
     private void load() {
+        // A "warps" key left in the file by older versions is ignored (and dropped on the next save).
         Map<String, Object> root = JsonFile.load(file);
         for (Map.Entry<String, Object> e : JsonFile.obj(root.get("homes")).entrySet()) {
             try {
@@ -36,10 +36,6 @@ public final class Places {
             } catch (IllegalArgumentException ignored) {
             }
         }
-        for (Map.Entry<String, Object> e : JsonFile.obj(root.get("warps")).entrySet()) {
-            Loc l = Loc.fromMap(JsonFile.obj(e.getValue()));
-            if (l != null) warps.put(e.getKey().toLowerCase(), l);
-        }
     }
 
     private synchronized void save() {
@@ -51,13 +47,9 @@ public final class Places {
             h.put(id.toString(), mm);
         });
         root.put("homes", h);
-        Map<String, Object> w = new LinkedHashMap<>();
-        warps.forEach((n, l) -> w.put(n, l.toMap()));
-        root.put("warps", w);
         JsonFile.save(file, root);
     }
 
-    // ---- homes
     public synchronized Result setHome(UUID id, String name, Loc loc, int max) {
         if (!Names.validPlace(name)) return Result.INVALID_NAME;
         Map<String, Loc> m = homes.computeIfAbsent(id, k -> new TreeMap<>());
@@ -83,27 +75,5 @@ public final class Places {
     public synchronized List<String> homeNames(UUID id) {
         Map<String, Loc> m = homes.get(id);
         return m == null ? List.of() : new ArrayList<>(m.keySet());
-    }
-
-    // ---- warps
-    public synchronized Result setWarp(String name, Loc loc) {
-        if (!Names.validPlace(name)) return Result.INVALID_NAME;
-        warps.put(name.toLowerCase(), loc);
-        save();
-        return Result.OK;
-    }
-
-    public synchronized Loc warp(String name) {
-        return warps.get(name.toLowerCase());
-    }
-
-    public synchronized Result delWarp(String name) {
-        if (warps.remove(name.toLowerCase()) == null) return Result.NOT_FOUND;
-        save();
-        return Result.OK;
-    }
-
-    public synchronized List<String> warpNames() {
-        return new ArrayList<>(warps.keySet());
     }
 }

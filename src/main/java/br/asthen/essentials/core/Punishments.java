@@ -1,7 +1,9 @@
 package br.asthen.essentials.core;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.LongSupplier;
@@ -95,6 +97,14 @@ public final class Punishments {
             return null;
         }
         return e;
+    }
+
+    /** All active entries of a kind; expired ones are removed on the spot. */
+    public synchronized List<Entry> list(Kind k) {
+        long now = clock.getAsLong();
+        boolean changed = map(k).values().removeIf(e -> !e.permanent() && e.expiresAt() <= now);
+        if (changed) save();
+        return new ArrayList<>(map(k).values());
     }
 
     public synchronized boolean remove(Kind k, UUID id) {

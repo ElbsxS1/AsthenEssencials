@@ -31,9 +31,11 @@ final class Events implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         plugin.teleporter().forget(e.getPlayer().getUniqueId());
         plugin.tpa().forget(e.getPlayer().getUniqueId());
+        plugin.prompts().forget(e.getPlayer().getUniqueId());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    // ignoreCancelled: a chat line already captured by a prompt (home name, reason) is not a muted message
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent e) {
         Punishments.Entry m = plugin.punishments().active(Punishments.Kind.MUTE, e.getPlayer().getUniqueId());
         if (m == null) return;

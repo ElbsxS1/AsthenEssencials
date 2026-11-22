@@ -2,7 +2,7 @@ name: AsthenEssentials
 version: '${project.version}'
 main: br.asthen.essentials.bukkit.AsthenEssentials
 api-version: '26.3'
-description: Menu, homes, warps, TPA e moderação para o servidor Asthen.
+description: Menu, homes, TPA, painel de admin e moderação para o servidor Asthen.
 authors: [ElbsxS1]
 softdepend: [floodgate, LobbyGuard]
 
@@ -17,6 +17,15 @@ commands:
     aliases: [menuitem]
     usage: /bussola
     permission: asthenessentials.menu
+  adminitem:
+    description: Pega o item Painel Admin (só operadores).
+    aliases: [itemadmin]
+    usage: /adminitem
+    permission: asthenessentials.admin
+  painel:
+    description: Abre o painel de administração (só operadores).
+    usage: /painel
+    permission: asthenessentials.admin
   sethome:
     description: Define uma home.
     usage: /sethome [nome]
@@ -33,22 +42,6 @@ commands:
     description: Lista suas homes.
     usage: /homes
     permission: asthenessentials.home
-  setwarp:
-    description: Cria ou move um warp.
-    usage: /setwarp <nome>
-    permission: asthenessentials.admin
-  delwarp:
-    description: Apaga um warp.
-    usage: /delwarp <nome>
-    permission: asthenessentials.admin
-  warp:
-    description: Vai para um warp (só operadores).
-    usage: /warp <nome>
-    permission: asthenessentials.admin
-  warps:
-    description: Lista os warps (só operadores).
-    usage: /warps
-    permission: asthenessentials.admin
   tpa:
     description: Pede para ir até outro jogador.
     usage: /tpa <jogador>

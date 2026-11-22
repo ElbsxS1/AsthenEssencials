@@ -1,12 +1,14 @@
 package br.asthen.essentials.bukkit;
 
-import br.asthen.essentials.core.Places;
+import br.asthen.essentials.core.Names;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 /** Builds the menus and opens them in the right style for the player's platform. */
 final class MenuService {
@@ -33,6 +35,26 @@ final class MenuService {
         JavaMenu.open(p, menu);
     }
 
+    /**
+     * Asks the player for a line of text: a form with a text field on Bedrock, the next chat message on Java.
+     * onAnswer gets the trimmed text (empty if the player left it blank and optional is true); onCancel runs
+     * when the player cancels. Both run on the main thread.
+     */
+    void ask(Player p, String title, String question, String placeholder, boolean optional,
+             Consumer<String> onAnswer, Runnable onCancel) {
+        if (floodgate) {
+            try {
+                if (BedrockMenu.isBedrock(p)) {
+                    BedrockMenu.prompt(plugin, p, title, question, placeholder, onAnswer, onCancel);
+                    return;
+                }
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Formulário Bedrock indisponível, usando o chat: " + t);
+            }
+        }
+        plugin.prompts().ask(p, question, optional, onAnswer, onCancel);
+    }
+
     private void run(Player p, String command) {
         p.performCommand(command);
     }
@@ -50,9 +72,6 @@ final class MenuService {
             e.add(new Menu.Entry("Voltar ao lobby", Material.ENDER_PEARL, "Volta ao lobby (fique parado 5s).", () -> run(p, "lob")));
         }
         e.add(new Menu.Entry("Pedir teleporte", Material.PLAYER_HEAD, "Pedir para ir até um jogador.", () -> openPlayers(p)));
-        if (p.hasPermission("asthenessentials.admin")) {
-            e.add(new Menu.Entry("Warps", Material.BEACON, "Locais do servidor (só operadores).", () -> openWarps(p)));
-        }
         open(p, new Menu("Menu Asthen", "Escolha uma opção:", e));
     }
 
@@ -64,16 +83,33 @@ final class MenuService {
             e.add(new Menu.Entry(h, Material.RED_BED, "Ir para esta home.", () -> run(p, "home " + h)));
         }
         if (homes.size() < max) {
-            e.add(new Menu.Entry("Definir home aqui", Material.LIME_DYE, "Cria uma home na sua posição.", () -> {
-                run(p, "sethome " + freeHomeName(homes));
-                openHomes(p);
-            }));
+            e.add(new Menu.Entry("Criar home aqui", Material.LIME_DYE, "Escolha um nome e crie uma home\nna sua posição.", () -> askHomeName(p)));
         }
         if (!homes.isEmpty()) {
             e.add(new Menu.Entry("Apagar uma home", Material.BARRIER, "Escolha qual apagar.", () -> openDeleteHome(p)));
         }
         e.add(back(p));
         open(p, new Menu("Minhas homes", homes.size() + " de " + max + " homes usadas.", e));
+    }
+
+    /** Asks for the new home's name, then creates it where the player stands. */
+    private void askHomeName(Player p) {
+        ask(p, "Nova home", "Que nome você quer dar à home? (letras, números, _ ou -, até 24. Em branco = nome automático)",
+                "ex.: casa", true, raw -> createHome(p, raw), () -> openHomes(p));
+    }
+
+    private void createHome(Player p, String raw) {
+        List<String> homes = plugin.places().homeNames(p.getUniqueId());
+        String name = raw.trim().replaceAll("\\s+", "_"); // "Minha casa" -> "Minha_casa"
+        if (name.isEmpty()) name = freeHomeName(homes);
+        if (!Names.validPlace(name)) {
+            Msg.err(p, "Nome inválido. Use letras, números, _ ou -, até 24 caracteres.");
+        } else if (homes.contains(name.toLowerCase(Locale.ROOT))) {
+            Msg.err(p, "Você já tem uma home chamada '" + name + "'. Escolha outro nome.");
+        } else {
+            run(p, "sethome " + name);
+        }
+        openHomes(p);
     }
 
     private static String freeHomeName(List<String> used) {
@@ -106,20 +142,5 @@ final class MenuService {
         }
         e.add(back(p));
         open(p, new Menu("Pedir teleporte", e.size() == 1 ? "Não há outros jogadores online." : "Para quem?", e));
-    }
-
-    void openWarps(Player p) {
-        if (!p.hasPermission("asthenessentials.admin")) {
-            Msg.err(p, "Sem permissão.");
-            return;
-        }
-        Places places = plugin.places();
-        List<Menu.Entry> e = new ArrayList<>();
-        for (String w : places.warpNames()) {
-            e.add(new Menu.Entry(w, Material.MAP, "Ir para o warp " + w + ".", () -> run(p, "warp " + w)));
-            if (e.size() >= 45) break;
-        }
-        e.add(back(p));
-        open(p, new Menu("Warps", e.size() == 1 ? "Nenhum warp criado (use /setwarp)." : "Escolha um warp:", e));
     }
 }

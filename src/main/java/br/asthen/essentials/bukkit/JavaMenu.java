@@ -10,6 +10,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Chest-style menu for Java players. */
@@ -50,7 +51,9 @@ final class JavaMenu {
             ItemStack it = new ItemStack(e.icon());
             ItemMeta meta = it.getItemMeta();
             meta.displayName(plain(e.label(), NamedTextColor.GOLD));
-            meta.lore(List.of(plain(e.description(), NamedTextColor.GRAY)));
+            List<Component> lore = new ArrayList<>();
+            for (String line : e.description().split("\n")) lore.add(plain(line, NamedTextColor.GRAY));
+            meta.lore(lore);
             it.setItemMeta(meta);
             inv.setItem(i, it);
         }
