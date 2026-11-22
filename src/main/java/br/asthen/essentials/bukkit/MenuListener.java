@@ -9,7 +9,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.Plugin;
 
-/** Menu items are buttons: nothing can be taken, moved or dropped. The same goes for the read-only admin views. */
+/** Menu items are buttons: nothing can be taken, moved or dropped. Admin views only allow taking (see InspectMenu). */
 final class MenuListener implements Listener {
     private final Plugin plugin;
 
@@ -22,11 +22,19 @@ final class MenuListener implements Listener {
         InventoryHolder top = e.getView().getTopInventory().getHolder();
 
         if (top instanceof InspectMenu.Holder view) {
-            e.setCancelled(true); // read-only: no taking, moving, swapping or shift-clicking
+            e.setCancelled(true); // nothing moves by itself: a click on an item is handled by InspectMenu.take
             if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
-            if (e.getSlot() == view.backSlot && e.getWhoClicked() instanceof Player p) {
+            if (!(e.getWhoClicked() instanceof Player p)) return;
+            if (!p.hasPermission(AdminItem.PERMISSION)) {
+                p.closeInventory();
+                return;
+            }
+            int slot = e.getSlot();
+            if (slot == view.backSlot) {
                 p.closeInventory();
                 Bukkit.getScheduler().runTask(plugin, view.back);
+            } else {
+                Bukkit.getScheduler().runTask(plugin, () -> InspectMenu.take(plugin, p, view, slot));
             }
             return;
         }

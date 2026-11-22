@@ -17,8 +17,11 @@ Item exclusivo de administradores (permissão `asthenessentials.admin`, padrão:
   `/painel` abre o painel direto, sem o item. Quem não é admin não consegue usar o item, e ele é removido do inventário quando
   o jogador entra no servidor sem a permissão (por exemplo, um ex-admin).
 - **Jogadores online** > escolher o jogador:
-  - **Ver inventário** e **Ver baú do ender**: só leitura. O admin vê uma **cópia** do momento em que abriu; nada pode ser pego nem
-    movido. Só funciona com o jogador online. Cada abertura é registrada no console.
+  - **Ver inventário** e **Ver baú do ender**: mostra tudo (inventário, hotbar, armadura, mão secundária e o baú do ender).
+    **Clicar em um item pega a pilha inteira** e leva para o seu inventário (armadura e espada também). Se o seu inventário
+    estiver cheio, o que não couber volta para o jogador. Não dá para colocar nem trocar itens de lugar. Cada clique é conferido
+    com o que o jogador tem **naquele momento**: se ele mexeu no inventário enquanto você olhava, a tela é atualizada e nada é
+    duplicado. Só funciona com o jogador online. Cada item pego fica registrado no console (quem pegou, o quê e de quem).
   - **Expulsar** (pede o motivo), **Silenciar** e **Banir**: escolhe o **tempo** (30 minutos, 2 horas, 1 dia, 7 dias, 30 dias ou
     permanente) e depois o **motivo** (opcional). Usam os mesmos comandos `/kick`, `/tempban`, `/ban` e `/mute`.
   - Não dá para se punir pelo painel.
@@ -72,7 +75,9 @@ o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 s
 - [ ] Menu de jogador comum não tem Warps (removidos); `/warp` não existe mais.
 - [ ] Menu > Minhas homes > Criar home aqui: Java pede o nome no chat (e a mensagem não aparece para os outros), Bedrock abre o formulário; nome repetido é recusado; `cancelar` volta.
 - [ ] `/adminitem` com op entrega o item; sem op dá "sem permissão". Botão direito abre o painel em qualquer mundo.
-- [ ] Painel > jogador > Ver inventário e Ver baú do ender: mostra o conteúdo certo, nada pode ser pego/movido (clique, shift-clique, arrastar), Voltar funciona.
+- [ ] Painel > jogador > Ver inventário: clicar em item, armadura, espada e item da mão secundária passa para o seu inventário e some do jogador (dentro do jogo dele). O mesmo no Ver baú do ender.
+- [ ] Com o seu inventário cheio, o que não couber volta para o jogador; com o jogador mexendo no inventário, a tela atualiza e nada duplica.
+- [ ] Não dá para colocar itens nem arrastar/mover na tela; Voltar funciona.
 - [ ] Painel > Banir 30 minutos com motivo: o jogador é expulso, não consegue entrar e a mensagem mostra tempo e motivo; aparece em Banidos e clicar remove.
 - [ ] Painel > Silenciar 30 minutos: o jogador não consegue falar; aparece em Silenciados; "Remover silêncio" libera. Expulsar com motivo funciona.
 - [ ] 6ª home é recusada; teleporte espera 5s e cancela se andar; `/tpa` + `/tpaccept` entre dois jogadores na sobrevivência.

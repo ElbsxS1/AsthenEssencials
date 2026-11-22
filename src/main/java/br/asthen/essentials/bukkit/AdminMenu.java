@@ -88,8 +88,8 @@ final class AdminMenu {
         if (t == null) return;
         String name = t.getName();
         List<Menu.Entry> e = new ArrayList<>();
-        e.add(new Menu.Entry("Ver inventário", Material.CHEST, "Só leitura: uma cópia do que\n" + name + " tem agora.", () -> viewInventory(p, id)));
-        e.add(new Menu.Entry("Ver baú do ender", Material.ENDER_CHEST, "Só leitura.", () -> viewEnder(p, id)));
+        e.add(new Menu.Entry("Ver inventário", Material.CHEST, "Clique em um item para pegá-lo\n(armadura, espada, o que for).", () -> viewInventory(p, id)));
+        e.add(new Menu.Entry("Ver baú do ender", Material.ENDER_CHEST, "Clique em um item para pegá-lo.", () -> viewEnder(p, id)));
         if (!t.equals(p)) { // never punish yourself by accident
             if (plugin.punishments().active(Punishments.Kind.MUTE, id) != null) {
                 e.add(new Menu.Entry("Remover silêncio", Material.BELL, name + " já está silenciado.\nClique para liberar o chat.", () -> {
@@ -106,7 +106,7 @@ final class AdminMenu {
         plugin.menus().open(p, new Menu("Gerenciar " + name, "O que fazer com " + name + "?", e));
     }
 
-    // ------------------------------------------------------------------ read-only views
+    // ------------------------------------------------------------------ views
     private void viewInventory(Player p, UUID id) {
         if (!allowed(p)) return;
         Player t = online(p, id);
