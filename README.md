@@ -5,6 +5,9 @@ Plugin **Paper 26.3** (Java 25): menu, homes, TPA, painel de administração e m
 ## Menu — `/menu`
 - **Java:** abre um menu de baú (os itens são botões; nada pode ser pego).
 - **Bedrock:** abre um formulário nativo (precisa do **Floodgate**; sem ele, o baú aparece também no Bedrock via Geyser).
+  O título fica em negrito dourado e cada botão tem cor em negrito e um ícone do próprio Minecraft (cama, pérola do Ender,
+  jogadores, "+", lixeira, seta). Os ícones usam texturas do jogo; se algum não existir na versão do cliente, o botão aparece
+  só com o texto colorido. O estilo fica em `BedrockMenu.java`.
 - Opções: Minhas homes (ir, criar, apagar), Voltar ao lobby (se houver LobbyGuard) e Pedir teleporte (lista de jogadores online).
 - **Criar home:** antes de criar, o menu pergunta o **nome** da home. No Bedrock aparece um formulário com campo de texto; no Java
   você digita o nome no chat (a mensagem não aparece para os outros). `pular` ou em branco usa um nome automático (`home`, `home2`...),

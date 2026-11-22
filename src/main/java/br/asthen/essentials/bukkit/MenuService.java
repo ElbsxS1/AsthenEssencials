@@ -72,7 +72,7 @@ final class MenuService {
             e.add(new Menu.Entry("Voltar ao lobby", Material.ENDER_PEARL, "Volta ao lobby (fique parado 5s).", () -> run(p, "lob")));
         }
         e.add(new Menu.Entry("Pedir teleporte", Material.PLAYER_HEAD, "Pedir para ir até um jogador.", () -> openPlayers(p)));
-        open(p, new Menu("Menu Asthen", "Escolha uma opção:", e));
+        open(p, new Menu("Menu Asthen", "Bem-vindo! O que você quer fazer?", e));
     }
 
     void openHomes(Player p) {
