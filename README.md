@@ -22,6 +22,12 @@ Plugin **Paper 26.3** (Java 25): menu, homes, TPA, painel de administração e m
 - **Espera entre pedidos:** cada jogador só pode mandar um `/tpa` a cada **10 segundos** (`teleport.tpa-request-cooldown-seconds`),
   vale para todos, inclusive operadores. Isso é separado do intervalo de 10s entre teleportes (`teleport.cooldown-seconds`).
 
+## Proteção dos itens especiais
+O Menu Asthen (Estrela do Nether) e o Painel Admin (Vara de Blaze) não viram outra coisa: não entram em **receitas**
+(a estrela não vira sinalizador, a vara não vira pó de blaze), nem no **Crafter**, não servem de **combustível** de fornalha
+e não passam pela **bigorna**. Continuam podendo ser largados, guardados e carregados. Uma Estrela do Nether ou Vara de Blaze
+comum (sem a etiqueta do plugin) segue funcionando normalmente.
+
 ## Painel Admin
 Item exclusivo de administradores (permissão `asthenessentials.admin`, padrão: op), separado do Menu Asthen.
 - `/adminitem` (alias `/itemadmin`) entrega o item **Painel Admin** (Vara de Blaze; material em `admin-item.material`). Funciona em **qualquer mundo**.
@@ -85,6 +91,8 @@ o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 s
 - [ ] Menu > Voltar ao lobby roda o `/lob` do LobbyGuard.
 - [ ] Menu de jogador comum não tem Warps (removidos); `/warp` não existe mais.
 - [ ] Menu > Minhas homes > Criar home aqui: Java pede o nome no chat (e a mensagem não aparece para os outros), Bedrock abre o formulário; nome repetido é recusado; `cancelar` volta.
+- [ ] Menu Asthen na grade de craft com 9 estrelas/ouro etc. não oferece sinalizador; Painel Admin sozinho na grade não oferece pó de blaze (nem na grade 2x2, nem com shift-clique). Uma vara de blaze comum continua virando pó.
+- [ ] Painel Admin como combustível de fornalha: não queima. Menu Asthen/Painel Admin na bigorna: sem resultado.
 - [ ] `/adminitem` com op entrega o item; sem op dá "sem permissão". Botão direito abre o painel em qualquer mundo.
 - [ ] Painel > jogador > Ver inventário: clicar em item, armadura, espada e item da mão secundária passa para o seu inventário e some do jogador (dentro do jogo dele). O mesmo no Ver baú do ender.
 - [ ] Com o seu inventário cheio, o que não couber volta para o jogador; com o jogador mexendo no inventário, a tela atualiza e nada duplica.

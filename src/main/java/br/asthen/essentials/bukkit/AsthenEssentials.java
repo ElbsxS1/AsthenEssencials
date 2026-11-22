@@ -62,6 +62,7 @@ public final class AsthenEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuItemListener(this, menuItem), this);
         getServer().getPluginManager().registerEvents(new AdminItemListener(this, adminItem), this);
+        getServer().getPluginManager().registerEvents(new ItemGuard(menuItem, adminItem), this);
         boolean floodgate = Bukkit.getPluginManager().getPlugin("floodgate") != null;
         getLogger().info("AsthenEssentials ativo. Menu Bedrock (Floodgate): " + (floodgate ? "sim" : "não, usando baú para todos"));
     }
