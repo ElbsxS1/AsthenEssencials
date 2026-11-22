@@ -8,11 +8,19 @@ Plugin **Paper 26.3** (Java 25): menu, homes, TPA, painel de administração e m
   O título fica em negrito dourado e cada botão tem cor em negrito e um ícone do próprio Minecraft (cama, pérola do Ender,
   jogadores, "+", lixeira, seta). Os ícones usam texturas do jogo; se algum não existir na versão do cliente, o botão aparece
   só com o texto colorido. O estilo fica em `BedrockMenu.java`.
-- Opções: Minhas homes (ir, criar, apagar), Voltar ao lobby (se houver LobbyGuard) e Pedir teleporte (lista de jogadores online).
+- Opções: Minhas homes (ir, criar, apagar), Voltar ao lobby (se houver LobbyGuard), Pedir teleporte (lista de jogadores online) e Configurações.
 - **Criar home:** antes de criar, o menu pergunta o **nome** da home. No Bedrock aparece um formulário com campo de texto; no Java
   você digita o nome no chat (a mensagem não aparece para os outros). `pular` ou em branco usa um nome automático (`home`, `home2`...),
   `cancelar` volta. Espaços viram `_` ("Minha casa" vira `Minha_casa`); aceita letras com acento, números, `_` e `-`, até 24 caracteres.
   Nome repetido é recusado (não sobrescreve a home existente).
+
+## Pedidos de teleporte (`/tpa`)
+- Quando alguém pede para ir até você, abre na hora um menu com **ACEITAR** e **NEGAR** (formulário no Bedrock, baú no Java).
+  A mensagem com `/tpaccept` e `/tpdeny` continua aparecendo no chat também.
+- **Menu > Configurações > Janela de pedidos de TP** liga e desliga esse menu **para cada jogador** (padrão: ligada). Desligada,
+  o jogador recebe só a mensagem no chat e usa `/tpaccept` ou `/tpdeny`. A escolha fica salva em `settings.json`.
+- **Espera entre pedidos:** cada jogador só pode mandar um `/tpa` a cada **10 segundos** (`teleport.tpa-request-cooldown-seconds`),
+  vale para todos, inclusive operadores. Isso é separado do intervalo de 10s entre teleportes (`teleport.cooldown-seconds`).
 
 ## Painel Admin
 Item exclusivo de administradores (permissão `asthenessentials.admin`, padrão: op), separado do Menu Asthen.
@@ -56,18 +64,18 @@ o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 s
 | Só operadores | `/adminitem`, `/painel`, `/kick`, `/ban`, `/tempban <jogador> <30m\|2h\|7d>`, `/unban`, `/mute [tempo]`, `/unmute`, `/aessentials reload\|setpickup\|removepickup` |
 
 - Máximo de **5 homes** por jogador (`homes.max`).
-- Teleportes têm **espera de 5s**, cancelada se o jogador se mexer (`teleport.warmup-seconds`), e intervalo de 10s.
+- Teleportes têm **espera de 5s**, cancelada se o jogador se mexer (`teleport.warmup-seconds`), e intervalo de 10s entre um teleporte e outro.
 - Não há economia, `/back` nem `/rtp`.
 - Comandos de operador não aparecem para quem não pode usá-los.
 
 ## Instalação
 1. Baixe o `.jar` em **Actions > Build > Artifacts** (o GitHub compila com JDK 25).
 2. Coloque em `plugins/` (e o **Floodgate**, se houver jogadores Bedrock) e reinicie.
-3. Dados em `plugins/AsthenEssentials/`: `places.json`, `punishments.json`. Se vier da 0.4.0, os warps antigos em `places.json`
+3. Dados em `plugins/AsthenEssentials/`: `places.json`, `punishments.json`, `settings.json`. Se vier da 0.4.0, os warps antigos em `places.json`
    são ignorados e somem na próxima gravação (as homes continuam).
 
 ## Testes
-`./scripts/run-tests.sh` roda 38 testes (JDK puro) do núcleo. A camada do Paper/Floodgate foi só compilada contra stubs.
+`./scripts/run-tests.sh` roda 43 testes (JDK puro) do núcleo. A camada do Paper/Floodgate foi só compilada contra stubs.
 
 ### Roteiro em jogo
 - [ ] No lobby, `/aessentials setpickup` olhando para um baú; clicar nele entrega o Menu Asthen (não abre o baú); clicar de novo diz que já tem.
@@ -84,6 +92,9 @@ o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 s
 - [ ] Painel > Banir 30 minutos com motivo: o jogador é expulso, não consegue entrar e a mensagem mostra tempo e motivo; aparece em Banidos e clicar remove.
 - [ ] Painel > Silenciar 30 minutos: o jogador não consegue falar; aparece em Silenciados; "Remover silêncio" libera. Expulsar com motivo funciona.
 - [ ] 6ª home é recusada; teleporte espera 5s e cancela se andar; `/tpa` + `/tpaccept` entre dois jogadores na sobrevivência.
+- [ ] `/tpa` para outro jogador: ele recebe o menu ACEITAR/NEGAR (Java: baú; Bedrock: formulário) e a mensagem no chat; ACEITAR e NEGAR funcionam.
+- [ ] Menu > Configurações > desligar a janela: o próximo `/tpa` chega só no chat e `/tpaccept` funciona; religar volta a abrir o menu; a escolha sobrevive a reiniciar.
+- [ ] Mandar dois `/tpa` seguidos (qualquer jogador, inclusive op): o segundo diz "Aguarde Ns" até passarem 10s.
 - [ ] `/tempban Fulano 1m` e `/mute Fulano 1m`; reiniciar mantém homes, blocos de retirada, bans e mutes.
 
 ## Créditos

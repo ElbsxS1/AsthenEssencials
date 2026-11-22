@@ -72,6 +72,7 @@ final class MenuService {
             e.add(new Menu.Entry("Voltar ao lobby", Material.ENDER_PEARL, "Volta ao lobby (fique parado 5s).", () -> run(p, "lob")));
         }
         e.add(new Menu.Entry("Pedir teleporte", Material.PLAYER_HEAD, "Pedir para ir até um jogador.", () -> openPlayers(p)));
+        e.add(new Menu.Entry("Configurações", Material.COMPARATOR, "Ajuste como o menu se comporta.", () -> openSettings(p)));
         open(p, new Menu("Menu Asthen", "Bem-vindo! O que você quer fazer?", e));
     }
 
@@ -130,6 +131,30 @@ final class MenuService {
         }
         e.add(new Menu.Entry("Voltar", Material.ARROW, "Volta às homes.", () -> openHomes(p)));
         open(p, new Menu("Apagar home", "Qual home apagar?", e));
+    }
+
+    /** Shown to the target when someone asks to teleport to them (unless they turned it off in Configurações). */
+    void openTpaRequest(Player target, String fromName) {
+        int timeout = Math.max(5, plugin.getConfig().getInt("teleport.tpa-timeout-seconds", 60));
+        List<Menu.Entry> e = new ArrayList<>();
+        e.add(new Menu.Entry("ACEITAR", Material.LIME_CONCRETE, fromName + " vai até você.", () -> run(target, "tpaccept")));
+        e.add(new Menu.Entry("NEGAR", Material.RED_CONCRETE, "Recusa o pedido de " + fromName + ".", () -> run(target, "tpdeny")));
+        open(target, new Menu("Pedido de teleporte", fromName + " quer ir até você.\nO pedido expira em " + timeout + "s.", e));
+    }
+
+    void openSettings(Player p) {
+        boolean on = plugin.settings().tpaWindow(p.getUniqueId());
+        List<Menu.Entry> e = new ArrayList<>();
+        e.add(new Menu.Entry("Janela de pedidos de TP: " + (on ? "LIGADA" : "DESLIGADA"),
+                on ? Material.LIME_CONCRETE : Material.RED_CONCRETE,
+                on ? "Quando alguém pedir para ir até você, abre\nACEITAR / NEGAR. Clique para desligar\n(aí você usa /tpaccept ou /tpdeny)."
+                        : "Você recebe só a mensagem no chat e usa\n/tpaccept ou /tpdeny. Clique para ligar a janela.",
+                () -> {
+                    plugin.settings().setTpaWindow(p.getUniqueId(), !on);
+                    openSettings(p);
+                }));
+        e.add(back(p));
+        open(p, new Menu("Configurações", "Toque para ligar ou desligar.", e));
     }
 
     void openPlayers(Player p) {

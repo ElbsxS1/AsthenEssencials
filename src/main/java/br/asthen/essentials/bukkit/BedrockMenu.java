@@ -39,6 +39,9 @@ final class BedrockMenu {
             case LEATHER_BOOTS -> new Style("§6", "textures/items/leather_boots");
             case TNT -> new Style("§4", "textures/blocks/tnt_side");
             case BEDROCK -> new Style("§4", "textures/blocks/bedrock");
+            case LIME_CONCRETE -> new Style("§2", "textures/ui/check");
+            case RED_CONCRETE -> new Style("§4", "textures/ui/cancel");
+            case COMPARATOR -> new Style("§8", "textures/ui/settings_glyph_color_2x");
             case CHEST, ENDER_CHEST -> new Style("§5", null);
             case BELL -> new Style("§6", null);
             default -> PLAIN;

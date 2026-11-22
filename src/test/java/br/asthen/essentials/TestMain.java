@@ -23,6 +23,7 @@ public final class TestMain {
         Path dir = Files.createTempDirectory("ae-test");
         places(dir);
         legacyWarps(dir);
+        settings(dir);
         tpa();
         pickups(dir);
         cooldowns();
@@ -51,6 +52,20 @@ public final class TestMain {
                 && new Places(f).home(u, "cabeça") != null);
         check("delhome", again.delHome(u, "casa") == Places.Result.OK && again.delHome(u, "casa") == Places.Result.NOT_FOUND);
         check("homeNames", again.homeNames(u).equals(java.util.List.of("cabeça")));
+    }
+
+    static void settings(Path d) throws Exception {
+        Path f = d.resolve("settings.json");
+        UUID u = UUID.randomUUID();
+        PlayerSettings s = new PlayerSettings(f);
+        check("tpa window on by default", s.tpaWindow(u));
+        s.setTpaWindow(u, false);
+        check("tpa window off", !s.tpaWindow(u) && s.tpaWindow(UUID.randomUUID()));
+        check("tpa window off persisted", !new PlayerSettings(f).tpaWindow(u));
+        s.setTpaWindow(u, true);
+        check("tpa window back on persisted", new PlayerSettings(f).tpaWindow(u));
+        Files.writeString(f, "{\"tpaWindowOff\":{\"nao-e-uuid\":true}}");
+        check("bad key ignored", new PlayerSettings(f).tpaWindow(u));
     }
 
     static void legacyWarps(Path d) throws Exception {

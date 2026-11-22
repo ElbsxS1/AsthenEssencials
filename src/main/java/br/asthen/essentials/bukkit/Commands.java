@@ -192,9 +192,18 @@ final class Commands implements TabExecutor {
             Msg.err(s, "Esse jogador não está na sobrevivência.");
             return true;
         }
+        // Same wait for everyone, so nobody can flood another player with requests.
+        String key = "tpareq:" + p.getUniqueId();
+        long left = plugin.cooldowns().remaining(key);
+        if (left > 0) {
+            Msg.err(p, "Aguarde " + left + "s para enviar outro pedido de teleporte.");
+            return true;
+        }
+        plugin.cooldowns().start(key, plugin.getConfig().getInt("teleport.tpa-request-cooldown-seconds", 10));
         plugin.tpa().create(p.getUniqueId(), t.getUniqueId());
         Msg.ok(p, "Pedido enviado para " + t.getName() + ".");
         Msg.info(t, p.getName() + " quer ir até você. Use /tpaccept ou /tpdeny.");
+        if (plugin.settings().tpaWindow(t.getUniqueId())) plugin.menus().openTpaRequest(t, p.getName());
         return true;
     }
 

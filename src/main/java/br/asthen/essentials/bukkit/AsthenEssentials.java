@@ -3,6 +3,7 @@ package br.asthen.essentials.bukkit;
 import br.asthen.essentials.core.Cooldowns;
 import br.asthen.essentials.core.Pickups;
 import br.asthen.essentials.core.Places;
+import br.asthen.essentials.core.PlayerSettings;
 import br.asthen.essentials.core.Punishments;
 import br.asthen.essentials.core.TpaManager;
 import org.bukkit.Bukkit;
@@ -21,6 +22,7 @@ public final class AsthenEssentials extends JavaPlugin {
     private Places places;
     private Pickups pickups;
     private Punishments punishments;
+    private PlayerSettings settings;
     private TpaManager tpa;
     private final Cooldowns cooldowns = new Cooldowns();
     private Teleporter teleporter;
@@ -37,6 +39,7 @@ public final class AsthenEssentials extends JavaPlugin {
         places = new Places(data.resolve("places.json"));
         pickups = new Pickups(data.resolve("pickups.json"));
         punishments = new Punishments(data.resolve("punishments.json"));
+        settings = new PlayerSettings(data.resolve("settings.json"));
         tpa = new TpaManager(Math.max(5, getConfig().getInt("teleport.tpa-timeout-seconds", 60)));
         teleporter = new Teleporter(this, cooldowns);
         menus = new MenuService(this);
@@ -88,6 +91,10 @@ public final class AsthenEssentials extends JavaPlugin {
 
     Places places() {
         return places;
+    }
+
+    PlayerSettings settings() {
+        return settings;
     }
 
     Punishments punishments() {
