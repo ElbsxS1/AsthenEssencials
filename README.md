@@ -109,8 +109,6 @@ o jogador para o bloco que ele olha. Bússolas do Menu Asthen da versão 0.3.0 s
 Inspirado em *Minecraft Essentials* de Paoeni (MIT). Nenhum código ou recurso do add-on foi copiado.
 
 
-## Esse Plugin Trabalha com https://github.com/ElbsxS1/DiscordKitBridge e também https://github.com/ElbsxS1/Lobby-Guard e o Bot https://github.com/contatorzlkz-prog/BOT-ASTHEN
-
 ## 🔗 Ecossistema Asthen
 
 Este projeto faz parte do ecossistema **Asthen**, um conjunto de plugins e ferramentas que trabalham juntos para integrar o servidor Minecraft, o gerenciamento de jogadores, o lobby, os comandos, os sistemas internos e o Discord.
